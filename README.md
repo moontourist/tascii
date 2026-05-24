@@ -1,2 +1,12 @@
-# tascii
-a simple reminder script
+#                            
+                           
+ █▄                        
+▄██▄                  ▀▀ ▀▀
+ ██ ▄▀▀█▄ ▄██▀█ ▄███▀ ██ ██
+ ██ ▄█▀██ ▀███▄ ██    ██ ██
+▄██▄▀█▄███▄▄██▀▄▀███▄▄██▄██
+                           
+                           
+a simple reminder script using ASCII!
+
+
