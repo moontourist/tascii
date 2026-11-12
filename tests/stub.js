@@ -21,6 +21,15 @@ window.__errors = [];
 addEventListener('error', (e) => __errors.push(e.message));
 addEventListener('unhandledrejection', (e) => __errors.push(String(e.reason)));
 
+// Headless Chrome here never draws the frame a real view transition waits for,
+// so this one applies the change at once and counts it.
+window.__wipes = 0;
+document.startViewTransition = (update) => {
+  __wipes++;
+  update();
+  return { ready: Promise.resolve() };
+};
+
 const listeners = [];
 // __fire({ tasks: { newValue } }) pretends another window saved something.
 window.__fire = (changes) => listeners.forEach((f) => f(changes, 'local'));

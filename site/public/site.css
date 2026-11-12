@@ -24,6 +24,19 @@
   --gap: 12px;
   color-scheme: dark;
 }
+/* The other two themes, picked in the demo's prefs (prefs.js sets data-theme). Same colors as the panel. */
+:root[data-theme="dark"] {
+  --desk: #121212; --bg: #1c1c1c; --text: #e6e6e6; --accent: #8ab4f8; --ok: #81c995; --line: #5f6368;
+  --dim: color-mix(in srgb, var(--text) 65%, var(--bg));
+}
+:root[data-theme="light"] {
+  --desk: #ececec; --bg: #fafafa; --text: #1f1f1f; --accent: #1a5fc8; --ok: #137333; --line: #b8b8b8;
+  color-scheme: light;
+}
+/* Theme change: the new theme wipes across from the left, in step with the demo. */
+::view-transition-old(root) { animation: none; }
+::view-transition-new(root) { animation: wipe 0.5s cubic-bezier(0.65, 0, 0.35, 1); }
+@keyframes wipe { from { clip-path: inset(0 100% 0 0); } }
 * { box-sizing: border-box; }
 html {
   background: var(--desk);
@@ -70,14 +83,14 @@ p { margin: 0; }
 .win:hover .bar, .win:focus-within .bar,
 .desk:not(:has(.win:hover, .win:focus-within)) .hero .bar { color: var(--accent); }
 
-.hero { grid-area: hero; display: flex; flex-direction: column; justify-content: center; gap: 22px; }
+.hero { grid-area: hero; display: flex; flex-direction: column; justify-content: center; gap: 22px; container-type: inline-size; }
 .logo { margin: 0; font-size: inherit; }
 .art {
   display: block;
   white-space: pre;
   color: var(--accent);
-  /* 27 columns wide; fills the window on a phone, stops growing on a big screen. */
-  font-size: clamp(13px, calc((100vw - 90px) / 16.4), 30px);
+  /* 58 columns wide: sized to fill the readme window's width, up to 22px. */
+  font-size: min(22px, 100cqi / 35.5);
   line-height: 1;
 }
 .sr {
@@ -126,7 +139,6 @@ p { margin: 0; }
   }
   .win { padding: 30px 32px 24px; }
   .hero { padding-left: 48px; }
-  .art { font-size: clamp(18px, 2.3vw, 34px); }
   .lede { font-size: 1.5rem; }
 }
 @media (prefers-reduced-motion: reduce) {
