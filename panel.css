@@ -11,17 +11,20 @@
 html {
   background: var(--bg);
   color: var(--fg);
-  font: 13px/1.6 ui-monospace, Menlo, Consolas, monospace;
+  font: 15px/1.5 ui-monospace, Menlo, Consolas, monospace;
 }
-body { margin: 0; padding: 12px; }
+body { margin: 0; padding: 12px 14px; }
 ::selection { background: var(--bg1); }
-header { display: flex; justify-content: space-between; align-items: baseline; gap: 1ch; }
+
+header { display: flex; justify-content: space-between; align-items: baseline; gap: 1ch; padding: 0 4px; }
 h1 { margin: 0; color: var(--yellow); font: inherit; font-weight: bold; }
 #today { color: var(--muted); }
+
 /* Fixed-length rule: add characters if the panel ever gets wider than ~120 columns. */
 .rule { overflow: hidden; white-space: nowrap; color: var(--bg1); user-select: none; }
 .rule::before { content: "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"; }
-.prompt { display: flex; gap: 1ch; color: var(--yellow); }
+
+.prompt { display: flex; gap: 1ch; align-items: center; min-height: 40px; padding: 0 4px; color: var(--yellow); }
 input {
   flex: 1;
   min-width: 0;
@@ -34,22 +37,26 @@ input {
   caret-color: var(--yellow);
 }
 input::placeholder { color: var(--muted); }
+
 ul { margin: 0; padding: 0; list-style: none; }
-li { display: flex; gap: 1ch; align-items: baseline; }
+li { display: flex; border-radius: 3px; }
+li:hover { background: var(--bg1); }
 button {
   padding: 0;
   border: 0;
   background: none;
   color: inherit;
   font: inherit;
+  text-align: left;
   cursor: pointer;
 }
-button:focus-visible { outline: 1px solid var(--yellow); }
-.box { color: var(--muted); }
-.box:hover { color: var(--yellow); }
+button:focus-visible { outline: 1px solid var(--yellow); outline-offset: -1px; }
+.task { flex: 1; min-width: 0; display: flex; gap: 1ch; align-items: baseline; min-height: 40px; padding: 8px 4px; }
+.box { flex: none; color: var(--muted); }
+.task:hover .box { color: var(--yellow); }
 .text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.del { color: var(--red); visibility: hidden; }
-li:hover .del, .del:focus-visible { visibility: visible; }
+.del { flex: none; width: 40px; color: var(--muted); text-align: center; }
+.del:hover { color: var(--red); }
 .done .box { color: var(--green); }
 .done .text { color: var(--muted); text-decoration: line-through; }
-#empty { margin: 0; color: var(--muted); }
+#empty { margin: 8px 4px; color: var(--muted); }

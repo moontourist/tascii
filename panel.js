@@ -21,9 +21,8 @@ function render() {
     const li = row.cloneNode(true);
     li.dataset.id = t.id;
     li.classList.toggle('done', t.done);
-    const box = li.querySelector('.box');
-    box.textContent = t.done ? '[x]' : '[ ]';
-    box.setAttribute('aria-label', t.done ? 'Mark not done' : 'Mark done');
+    li.querySelector('.box').textContent = t.done ? '[x]' : '[ ]';
+    li.querySelector('.task').setAttribute('aria-pressed', t.done);
     li.querySelector('.text').textContent = t.text; // textContent, never innerHTML: user text stays text
     return li;
   }));
@@ -61,7 +60,7 @@ list.addEventListener('click', (e) => {
   const li = btn.closest('li');
   const id = li.dataset.id;
   let focusId = id;
-  if (btn.classList.contains('box')) {
+  if (btn.classList.contains('task')) {
     const t = tasks.find((t) => t.id === id);
     t.done = !t.done;
   } else {
@@ -71,5 +70,5 @@ list.addEventListener('click', (e) => {
   save();
   render();
   // render() rebuilt the rows, so put keyboard focus back where it was.
-  (list.querySelector(`[data-id="${focusId}"] .box`) ?? input).focus();
+  (list.querySelector(`[data-id="${focusId}"] .task`) ?? input).focus();
 });
