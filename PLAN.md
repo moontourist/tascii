@@ -3,7 +3,7 @@ tests
 A minimalist, ASCII-style to-do list in Chrome's side panel. Gruvbox dark colors. Plain HTML, CSS and JavaScript: no frameworks, no libraries, no build step, no internet requests.
 
 ## Speed rules
-- No frameworks or libraries. System monospace font only.
+- No frameworks or libraries. Installed fonts only (JetBrains Mono, then the system monospace font).
 - The logo and the input are plain HTML, so they appear on the first frame. The list fills in as soon as storage answers (a few milliseconds).
 - The whole extension stays a few KB.
 
@@ -124,6 +124,9 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 
 ### v1.10.1: the right theme
 - Colors are Gruvbox Material Dark, the custom theme imported into Rex from Ghostty: `#282828` background, `#d4be98` text, `#d8a657` yellow, `#a9b665` green, `#7daea3` blue, `#7c6f64` lines, `#ea6962` red. Red is readable here, so delete is plain red text again.
+
+### v1.11.0: JetBrains Mono
+- Font is JetBrains Mono, using the copy installed on the computer (the Nerd Font Mono build first, for real bold), so nothing is downloaded. Falls back to the system monospace font if it isn't installed.
 
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.

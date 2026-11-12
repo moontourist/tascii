@@ -15,7 +15,8 @@
 html {
   background: var(--bg);
   color: var(--text);
-  font: 15px/1.5 ui-monospace, Menlo, Consolas, monospace;
+  /* Installed fonts only, nothing downloaded. The Nerd Font Mono build has every weight; plain JetBrains Mono is regular only. */
+  font: 15px/1.5 "JetBrainsMono NFM", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 body { margin: 0; padding: 12px 14px; }
 ::selection { background: var(--tint); color: var(--bg); }
