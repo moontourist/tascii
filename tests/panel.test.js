@@ -263,6 +263,13 @@ async function main() {
   check('+ grows text', root().fontSize === '15px');
   key('p');
   check('p opens prefs', !box.hidden);
+  // The website calls wipeIn() for its demo: one wipe, with the demo's change inside it.
+  const wipesBefore = __wipes;
+  let innerRan = false;
+  localStorage.setItem('prefs', '{"theme":"dark","size":15}');
+  wipeIn(() => { innerRan = true; });
+  check('one wipe carries an embedded page\'s change with this page\'s', __wipes === wipesBefore + 1 && innerRan
+    && document.documentElement.dataset.theme === 'dark');
   localStorage.setItem('prefs', '{"theme":"<script>","size":9999}');
   prefs = readPrefs();
   applyPrefs();

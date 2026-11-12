@@ -4,7 +4,7 @@
 const THEMES = ['gruvbox', 'dark', 'light'];
 const SIZES = [13, 15, 17, 19, 22, 26]; // px
 let prefs = readPrefs();
-let shownTheme; // the theme on screen, or on its way there
+let onScreen = ''; // the theme and size on screen (or on their way), as "theme/size"
 
 function readPrefs() {
   let p = {};
@@ -17,24 +17,40 @@ function readPrefs() {
   };
 }
 
+function drawPrefs() {
+  document.documentElement.dataset.theme = prefs.theme;
+  document.documentElement.style.setProperty('--size', `${prefs.size}px`);
+}
+
 function applyPrefs() {
-  const root = document.documentElement;
-  const change = () => {
-    root.dataset.theme = prefs.theme;
-    root.style.setProperty('--size', `${prefs.size}px`);
-  };
+  const was = onScreen;
+  onScreen = `${prefs.theme}/${prefs.size}`;
+  if (onScreen === was) return; // nothing new (say, our own change coming back from another window)
   // A new theme wipes across from the left (the CSS is in ::view-transition). Not on first load.
-  const wipe = shownTheme && shownTheme !== prefs.theme
+  const wipe = was && !was.startsWith(`${prefs.theme}/`)
     && document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches;
-  shownTheme = prefs.theme;
-  // Embedded in the website's demo, the page around it runs one wipe over everything, so this
-  // changes a couple of frames later to land inside that wipe (two wipes at once can freeze Chrome).
-  if (wipe && window !== top) requestAnimationFrame(() => requestAnimationFrame(change));
+  if (!wipe) return drawPrefs();
+  // Inside the website's demo, the page around it runs one wipe with this change inside it,
+  // so both switch together (two wipes at once can also freeze Chrome).
+  let host = null;
+  try {
+    if (window !== top && typeof top.wipeIn === 'function') host = top;
+  } catch {} // a page from another site: no access, wipe on our own
   // A wipe cut short (say, by another change) just skips the animation: the new theme still applies.
-  else if (wipe) document.startViewTransition(change).ready.catch(() => {});
-  else change();
+  if (host) host.wipeIn(drawPrefs);
+  else document.startViewTransition(drawPrefs).ready.catch(() => {});
 }
 applyPrefs();
+
+// Called by a copy of this page embedded in this one (the website's demo): wipe both at once.
+function wipeIn(inner) {
+  prefs = readPrefs(); // the demo saved them already
+  onScreen = `${prefs.theme}/${prefs.size}`;
+  document.startViewTransition(() => {
+    inner();
+    drawPrefs();
+  }).ready.catch(() => {});
+}
 
 // Another window changed them.
 addEventListener('storage', (e) => {

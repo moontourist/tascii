@@ -162,6 +162,10 @@ Reported: crossing off a task threw its sparks from the panel's top-left corner,
 - Tests: the fake storage now sorts fields like Chrome's, and a new check makes sure the sparks start on the task's box. With the old code 28 checks fail.
 - Checked in a test copy of Chrome running the real extension: sparks start on the box at 13px and 26px text, with the list scrolled and not, and the wipe slides across.
 
+### v1.16.2: one wipe on the website
+- The website's demo no longer switches theme on its own timer, which sometimes beat the page's wipe. It asks the page to run one wipe (`wipeIn` in `prefs.js`) and switches inside it, so both change together.
+- Prefs that come back unchanged (our own save, echoed from another window) no longer redraw.
+
 ### Phase 2 (v1.17.0): animations that follow the text size
 - Bigger or smaller text moves every row. Sparks are placed once, by screen position, so changing the size (or scrolling) while they fly leaves them behind. Start them inside the task's row instead, so they move with it at any size.
 - Same check for the other moving parts: the strike line, the row slide, and tiles moving with J/K or dragging.
@@ -203,6 +207,9 @@ Hosted on Cloudflare Pages from this repo. Website releases are tagged `site-vX.
 - A new window, `[x]`, with the extension's icon as a spinning 3D solid drawn in ASCII, like the classic spinning donut. `spin.js` pushes the flat `[x]` shape out into a solid, turns it, and shades each character by which way the surface faces. The brackets are drawn in the text colour, the x in green.
 - About 30 frames a second, only while it's on screen. Held still at an angle with reduced motion.
 - The TASCII wordmark is smaller (at most 12px characters).
+
+### site-v0.3.1: sharper [x]
+- The spinning `[x]` is drawn on a finer grid (96 by 34 characters), so the shape reads more clearly.
 
 ## Web app: tiling lists at tascii-list.com/app
 Many lists open at once, tiled like Hyprland: every list is a window, new windows split the screen, and all of them resize to fit the browser window.
