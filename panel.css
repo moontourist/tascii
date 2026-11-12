@@ -60,3 +60,27 @@ button:focus-visible { outline: 1px solid var(--yellow); outline-offset: -1px; }
 .done .box { color: var(--green); }
 .done .text { color: var(--muted); text-decoration: line-through; }
 #empty { margin: 8px 4px; color: var(--muted); }
+
+/* Cross-out: a line grows left to right under the label, then the row fades out. */
+.label {
+  background: linear-gradient(var(--fg), var(--fg)) no-repeat 0 55% / 0 1px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background-size 0.3s ease-out;
+}
+.leaving .label { background-size: 100% 1px; }
+.leaving { animation: leave 0.2s 0.3s ease-in forwards; }
+@keyframes leave { to { opacity: 0; transform: translateX(8px); } }
+@media (prefers-reduced-motion: reduce) {
+  .label { transition: none; }
+  .leaving { animation: none; }
+}
+
+.when { flex: none; color: var(--muted); }
+#history { margin-top: 8px; }
+summary { padding: 8px 4px; border-radius: 3px; color: var(--muted); list-style: none; cursor: pointer; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "+ "; }
+#history[open] summary::before { content: "- "; }
+summary:hover { background: var(--bg1); color: var(--fg); }
+summary:focus-visible { outline: 1px solid var(--yellow); outline-offset: -1px; }

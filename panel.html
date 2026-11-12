@@ -9,5 +9,6 @@
 <div class="rule" aria-hidden="true"></div>
 <ul id="list"></ul>
 <p id="empty" hidden>nothing to do.</p>
-<template id="row"><li><button class="task"><span class="box" aria-hidden="true"></span><span class="text"></span></button><button class="del" aria-label="Delete">x</button></li></template>
+<details id="history" hidden><summary>history (<span id="count">0</span>)</summary><ul id="done"></ul></details>
+<template id="row"><li><button class="task"><span class="box" aria-hidden="true"></span><span class="text"><span class="label"></span></span><span class="when"></span></button><button class="del" aria-label="Delete">x</button></li></template>
 <script src="panel.js"></script>
