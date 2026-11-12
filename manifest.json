@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "tascii",
+  "version": "0.1.0",
+  "description": "A minimalist ASCII to-do list.",
+  "minimum_chrome_version": "116",
+  "permissions": ["sidePanel", "storage"],
+  "action": { "default_title": "tascii" },
+  "side_panel": { "default_path": "panel.html" },
+  "background": { "service_worker": "background.js" }
+}
