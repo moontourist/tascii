@@ -62,9 +62,7 @@ button:focus-visible { outline: 1px solid var(--yellow); outline-offset: -1px; }
 .del:hover { color: var(--red); }
 .done .box { color: var(--green); }
 .done .text { color: var(--muted); text-decoration: line-through; }
-#empty { display: flex; gap: 2ch; align-items: center; margin: 12px 4px; color: var(--muted); }
-#empty pre { margin: 0; font: inherit; line-height: 1.2; color: var(--orange); }
-#empty p { margin: 0; }
+#empty { margin: 12px 4px; color: var(--muted); }
 
 /* Today's progress: [#######-------------] 2/5 */
 #progress { display: flex; justify-content: space-between; gap: 1ch; padding: 0 4px; color: var(--muted); white-space: pre; }

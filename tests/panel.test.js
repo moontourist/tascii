@@ -104,7 +104,7 @@ async function main() {
   task(0).nextElementSibling.focus();
   task(0).nextElementSibling.click();
   await wait(GONE);
-  check('empty list shows the cat', !empty.hidden && empty.querySelector('pre').textContent.includes('o.o'));
+  check('empty list shows a message', !empty.hidden);
   check('focus returns to input when the list empties', document.activeElement === input);
 }
 

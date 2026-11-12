@@ -84,12 +84,15 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 
 ### v1.5.0: ASCII touches
 - `[#####---------------] 1/4 today` progress bar under the header that grows one `#` at a time.
-- An ASCII cat when the list is empty, and a muted line of key hints at the bottom.
+- A muted line of key hints at the bottom.
 
 ### v1.6.0: satisfying clicks
 - Finishing: the box spins `[-] [\] [|] [/] [x]`, ASCII sparks (`* + . '`) burst out in Gruvbox colors, a green line strikes through, the row flashes, then slides away.
 - Restoring spins the box back to `[ ]`. Deleting turns the row red and slides it left. New tasks slide in.
 - Everything is saved before the animation starts, and reduced motion turns it all off.
+
+### v1.6.1
+- Removed the empty-list cat; an empty list just says `nothing to do.`
 
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.
