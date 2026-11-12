@@ -21,6 +21,11 @@ setInterval(showDate, 60_000); // a minute check survives the computer sleeping 
 
 const save = () => chrome.storage.local.set({ tasks });
 
+// Stored data could come from an older version, a bug, or a hand edit, so check its shape.
+const clean = (v) => (Array.isArray(v) ? v : [])
+  .filter((t) => typeof t?.id === 'string' && typeof t.text === 'string')
+  .map((t) => ({ ...t, done: t.done === true }));
+
 function rowFor(t) {
   const li = row.cloneNode(true);
   li.dataset.id = t.id;
@@ -59,14 +64,14 @@ function render() {
 }
 
 const loaded = chrome.storage.local.get({ tasks: [] }).then((r) => {
-  tasks = r.tasks;
+  tasks = clean(r.tasks);
   render();
 });
 
 // A panel open in another window changed the list: show its version.
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'local' || !changes.tasks) return;
-  const next = changes.tasks.newValue ?? [];
+  const next = clean(changes.tasks.newValue);
   if (JSON.stringify(next) === JSON.stringify(tasks)) return; // our own save
   tasks = next;
   render();

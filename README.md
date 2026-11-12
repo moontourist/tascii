@@ -28,6 +28,9 @@ a minimalist ASCII to-do list for Chrome's side panel.
 | `space` | cross off (or restore, in history) |
 | `i` or `/` | back to the input |
 
-Tasks are saved locally in Chrome and never leave your computer.
+Tasks are saved locally in Chrome and never leave your computer. The extension can't read websites or make network requests.
+
+## Test
+`node tests/run.mjs` checks permissions, the security policy, that the version matches the git tag, and banned code patterns. It then runs the panel in headless Chrome with fake storage, HTML-injection attempts and corrupted data.
 
 
