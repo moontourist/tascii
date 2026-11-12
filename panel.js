@@ -383,7 +383,7 @@ async function onRowClick(btn) {
 }
 
 // Keyboard: j/k (or arrows) move through tile headers, tasks and history toggles.
-// h/l move between a task and its x, space crosses off (or restores in history),
+// h/l move between a task and its x, space crosses off (or restores in history), x deletes,
 // i or / goes to the tile's input and Esc leaves it, r renames the tile,
 // J/K (or shift+arrows) move the tile, N adds a tile.
 const stops = () => [...document.querySelectorAll('.fold, .task, summary')].filter((el) => el.checkVisibility());
@@ -412,6 +412,7 @@ document.addEventListener('keydown', (e) => {
     case 'h': case 'ArrowLeft': li?.querySelector('.task').focus(); break;
     case 'l': case 'ArrowRight': li?.querySelector('.del').focus(); break;
     case ' ': if (!li) return; li.querySelector('.task').click(); break; // headers and history keep their own space
+    case 'x': if (!li) return; li.querySelector('.del').click(); break;
     case 'i': case '/': {
       const tile = tileFor(el);
       if (tile?.collapsed) {

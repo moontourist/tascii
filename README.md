@@ -30,6 +30,7 @@ tascii opens on your first task, ready for these. If keys do nothing, click the 
 | `j` / `k` (or `↓` / `↑`) | move down / up through tiles and tasks |
 | `h` / `l` (or `←` / `→`) | move between a task and its `x` |
 | `space` | cross off (or restore, in history) |
+| `x` | delete the selected task |
 | `i` or `/` | back to the tile's input (opens it if collapsed) |
 | `J` / `K` (or shift `↓` / `↑`) | move the tile down / up |
 | `r` | rename the tile |

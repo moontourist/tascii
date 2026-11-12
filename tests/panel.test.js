@@ -169,9 +169,10 @@ async function main() {
   // Another window changes things.
   __fire({ tasks: { newValue: [{ id: 'z', text: 'from other window', done: false, tile: 'main' }] } });
   check('syncs changes from another window', texts().join() === 'from other window' && q('.history').hidden);
-  task(0).nextElementSibling.focus();
-  task(0).nextElementSibling.click();
+  task(0).focus();
+  key('x');
   await wait(GONE);
+  check('x deletes the selected task', rows().length === 0 && !__store.tasks.some((t) => t.id === 'z'));
   check('empty list shows a message', !q('.empty').hidden);
   check('focus returns to the input when a list empties', focused() === q('.new'));
 }

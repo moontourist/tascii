@@ -113,6 +113,9 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 ### v1.8.1: contrast
 - Faded text raised to 90% aqua (4.8:1). Hover no longer adds a background, which pushed text under 4.5:1; the `[ ]` turning yellow shows hover instead.
 
+### v1.9.0: x deletes
+- Pressing `x` on a selected task deletes it, with the same slide-out as clicking its `x`.
+
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.
 2. Click "Load unpacked" and pick this folder.
