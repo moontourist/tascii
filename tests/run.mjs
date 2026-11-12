@@ -23,8 +23,9 @@ check('manifest: no website access, content scripts, or outside messaging',
 check('manifest: strict content security policy',
   m.content_security_policy?.extension_pages === "default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'");
 check('manifest: version is MAJOR.MINOR.PATCH', /^\d+\.\d+\.\d+$/.test(m.version));
+// Extension tags are vX.Y.Z; the website has its own site-vX.Y.Z tags.
 let tag = '';
-try { tag = execFileSync('git', ['describe', '--tags', '--exact-match'], { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); } catch {}
+try { tag = execFileSync('git', ['tag', '--points-at', 'HEAD'], { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] }).toString().split('\n').find((t) => /^v\d/.test(t)) ?? ''; } catch {}
 if (tag) check(`manifest: version matches git tag ${tag}`, tag === `v${m.version}`);
 
 const sources = readdirSync(root).filter((f) => /\.(js|html|css|json)$/.test(f));
@@ -33,13 +34,25 @@ const banned = [
   [/\.innerHTML|\.outerHTML|insertAdjacentHTML|document\.write/, 'HTML string injection'],
   [/\beval\(|new Function\(|set(Timeout|Interval)\(\s*['"`]/, 'code from strings'],
   [/\bfetch\(|XMLHttpRequest|WebSocket|EventSource|sendBeacon/, 'network calls'],
-  [/https?:\/\//, 'outside URLs'],
 ];
 for (const [re, what] of banned) {
   const hits = code.filter(([, src]) => re.test(src)).map(([f]) => f);
   check(`source: no ${what}${hits.length ? ` (found in ${hits.join(', ')})` : ''}`, hits.length === 0);
 }
+// The only outside URL allowed is the GitHub link: a plain link that opens a new tab, and the manifest's homepage.
+const GITHUB = 'https://github.com/moontourist/tascii';
+const urls = code.flatMap(([f, src]) => (src.match(/https?:\/\/[^\s"'`)<>]+/g) ?? []).map((u) => `${u} (${f})`));
+const allowed = [`${GITHUB} (panel.html)`, `${GITHUB} (manifest.json)`]; // the button, and the manifest's homepage_url
+const stray = urls.filter((u) => !allowed.includes(u));
+check(`source: no outside URLs except the GitHub link${stray.length ? ` (found ${stray.join(', ')})` : ''}`, stray.length === 0);
 const html = read('panel.html');
+// Every file the extension uses must go into the store zip.
+const pack = read('pack.sh');
+const needed = [...sources, ...Object.values(m.icons)];
+const missing = needed.filter((f) => !pack.includes(f));
+check(`pack: zip includes every extension file${missing.length ? ` (missing ${missing.join(', ')})` : ''}`, missing.length === 0);
+check('source: GitHub link opens a new tab without access to this page',
+  html.includes(`<a id="github" href="${GITHUB}" target="_blank" rel="noopener noreferrer"`));
 check('source: no inline scripts or on* handlers in HTML', !/<script(?![^>]*\bsrc=)[^>]*>|\son\w+=/i.test(html));
 
 // --- Browser checks: run the panel in headless Chrome with fake storage. ---

@@ -3,14 +3,31 @@
 <meta charset="utf-8">
 <title>tascii</title>
 <link rel="stylesheet" href="panel.css">
+<script src="prefs.js"></script>
 <header><h1>tascii</h1><time id="today"></time></header>
 <div id="progress" hidden><span aria-hidden="true">[<span id="fill"></span><span id="rest"></span>]</span><span id="tally"></span></div>
-<div class="rule" aria-hidden="true"></div>
-<label class="prompt"><span aria-hidden="true">&gt;</span><input id="new" placeholder="add a task" autocomplete="off" maxlength="500" aria-label="New task" autofocus></label>
-<div class="rule" aria-hidden="true"></div>
-<ul id="list"></ul>
-<p id="empty" hidden>nothing to do.</p>
-<details id="history" hidden><summary>history (<span id="count">0</span>)</summary><ul id="done"></ul></details>
-<footer aria-hidden="true">j/k move · spc done · l⏎ del · i add</footer>
+<main id="tiles"></main>
+<div id="actions"><button id="add-tile">[ + tile ]</button><button id="prefs-btn" aria-expanded="false" aria-controls="prefs">[ prefs ]</button><a id="github" href="https://github.com/moontourist/tascii" target="_blank" rel="noopener noreferrer" aria-label="tascii on GitHub (opens a new tab)">[ github ]</a></div>
+<section id="prefs" hidden aria-label="Preferences">
+  <div class="bar"><span>prefs</span></div>
+  <div class="pref"><span class="key">theme</span><span class="opts" role="radiogroup" aria-label="Theme">
+    <label><input type="radio" name="theme" value="gruvbox"><span class="mark" aria-hidden="true"></span>gruvbox</label>
+    <label><input type="radio" name="theme" value="dark"><span class="mark" aria-hidden="true"></span>dark</label>
+    <label><input type="radio" name="theme" value="light"><span class="mark" aria-hidden="true"></span>light</label>
+  </span></div>
+  <div class="pref"><span class="key">size</span><span class="opts">
+    <button id="smaller" aria-label="Smaller text">[-]</button><output id="size-out" aria-live="polite"></output><button id="bigger" aria-label="Larger text">[+]</button>
+  </span></div>
+</section>
+<footer aria-hidden="true"><span class="keys">j/k move · spc done · e edit · x del · u undo · i add · J/K tile · p prefs · +/- size</span><span class="hint">click the panel to use keys</span></footer>
+<template id="tile"><section class="tile">
+  <div class="bar"><button class="fold"></button><input class="title" maxlength="40" aria-label="Tile name" spellcheck="false" autocomplete="off"><span class="n"></span><button class="close" aria-label="Delete tile">x</button></div>
+  <div class="body">
+    <label class="prompt"><span aria-hidden="true">&gt;</span><input class="new" placeholder="add a task" autocomplete="off" maxlength="500" aria-label="New task"></label>
+    <ul class="open"></ul>
+    <p class="empty" hidden>nothing to do.</p>
+    <details class="history" hidden><summary>history (<span class="count">0</span>)</summary><ul class="done"></ul></details>
+  </div>
+</section></template>
 <template id="row"><li><button class="task"><span class="box" aria-hidden="true"></span><span class="text"><span class="label"></span></span><span class="when"></span></button><button class="del" aria-label="Delete">x</button></li></template>
 <script src="panel.js"></script>

@@ -1,31 +1,36 @@
 // Stands in for Chrome's extension APIs when panel.html runs as a plain page in tests.
 // Storage lives in memory and fires onChanged like the real thing.
 const presets = {
-  '': [{ id: 'a', text: 'old task', done: false, added: '' }],
+  // Saved by a version from before tiles: tasks only.
+  '': { tasks: [{ id: 'a', text: 'old task', done: false, added: '' }] },
   // Junk a broken older version, a bug, or a hand edit could leave in storage.
-  '#corrupt': [
-    null, 5, 'str',
-    { id: 7, text: 'number id' },
-    { id: 'n', text: { evil: 1 } },
-    { id: 'q"]', text: 'quote id', done: false },
-    { id: 'd', text: 'bad date', done: true, doneAt: 'not a date' },
-    { id: 'ok', text: 'valid', done: 'yes' },
-  ],
+  '#corrupt': {
+    tasks: [
+      null, 5, 'str',
+      { id: 7, text: 'number id' },
+      { id: 'n', text: { evil: 1 } },
+      { id: 'q"]', text: 'quote id', done: false, tile: 'w' },
+      { id: 'd', text: 'bad date', done: true, doneAt: 'not a date', tile: 'w' },
+      { id: 'ok', text: 'valid', done: 'yes', tile: 'missing' },
+    ],
+    tiles: [null, { id: 'w', name: 'work', collapsed: 'yes' }, { id: 'w', name: 'duplicate' }, { id: 5, name: 'bad' }],
+  },
 };
-window.__store = { tasks: structuredClone(presets[location.hash]) };
+window.__store = structuredClone(presets[location.hash]);
 window.__errors = [];
 addEventListener('error', (e) => __errors.push(e.message));
 addEventListener('unhandledrejection', (e) => __errors.push(String(e.reason)));
 
 const listeners = [];
-window.__fire = (newValue) => listeners.forEach((f) => f({ tasks: { newValue } }, 'local'));
+// __fire({ tasks: { newValue } }) pretends another window saved something.
+window.__fire = (changes) => listeners.forEach((f) => f(changes, 'local'));
 window.chrome = {
   storage: {
     local: {
       get: async (defaults) => ({ ...defaults, ...structuredClone(__store) }),
       set: async (o) => {
-        __store = structuredClone(o);
-        __fire(structuredClone(o.tasks));
+        Object.assign(__store, structuredClone(o));
+        __fire(Object.fromEntries(Object.entries(o).map(([k, v]) => [k, { newValue: structuredClone(v) }])));
       },
     },
     onChanged: { addListener: (f) => listeners.push(f) },

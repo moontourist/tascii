@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tascii: a minimalist ASCII to-do list</title>
+<meta name="description" content="A minimalist ASCII to-do list for Chrome's side panel. Free, open source, and private: your tasks never leave your browser.">
+<meta name="theme-color" content="#1d2021">
+<link rel="canonical" href="https://tascii-list.com/">
+<link rel="icon" href="/icons/icon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/icons/icon-128.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tascii-list.com/">
+<meta property="og:title" content="tascii">
+<meta property="og:description" content="A minimalist ASCII to-do list for Chrome's side panel.">
+<meta property="og:image" content="https://tascii-list.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="/fonts/jetbrains-mono-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/jetbrains-mono-extrabold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/site.css">
+<main class="desk">
+  <section class="win hero" aria-labelledby="name">
+    <p class="bar" aria-hidden="true">readme</p>
+    <h1 class="logo" id="name"><span class="art" aria-hidden="true"> █▄
+▄██▄                  ▀▀ ▀▀
+ ██ ▄▀▀█▄ ▄██▀█ ▄███▀ ██ ██
+ ██ ▄█▀██ ▀███▄ ██    ██ ██
+▄██▄▀█▄███▄▄██▀▄▀███▄▄██▄██</span><span class="sr">tascii</span></h1>
+    <p class="lede">A minimalist ASCII to-do list for Chrome's side panel.</p>
+    <p class="about">Click the toolbar icon and your lists are already there. Stack them in tiles, cross things off with a little <span class="x">[x]</span> spin, and run the whole thing from the keyboard.</p>
+    <p class="cta">
+      <a href="https://github.com/moontourist/tascii#install">[ install ]</a>
+      <a href="https://github.com/moontourist/tascii">[ source on github ]</a>
+    </p>
+    <p class="fine">Free and open source. Needs Chrome 123 or newer.</p>
+  </section>
+
+  <section class="win demo" aria-labelledby="t-demo">
+    <h2 class="bar" id="t-demo">try it <span class="note">live</span></h2>
+    <iframe src="/demo/" title="tascii, running live. Tasks you add here stay in this browser." loading="lazy"></iframe>
+  </section>
+
+  <section class="win keys" aria-labelledby="t-keys">
+    <h2 class="bar" id="t-keys">keys</h2>
+    <dl>
+      <dt>j / k</dt><dd>move through tasks</dd>
+      <dt>space</dt><dd>cross off</dd>
+      <dt>e</dt><dd>edit the words</dd>
+      <dt>x / u</dt><dd>delete / undo</dd>
+      <dt>i</dt><dd>add a task</dd>
+      <dt>J / K</dt><dd>move a tile</dd>
+      <dt>p</dt><dd>prefs: theme and text size</dd>
+    </dl>
+  </section>
+
+  <section class="win private" aria-labelledby="t-private">
+    <h2 class="bar" id="t-private">private</h2>
+    <p>Your tasks stay in your browser.</p>
+    <p class="about">No account, no tracking, no network requests. tascii asks for two permissions, the side panel and local storage, so it can't see the pages you visit.</p>
+    <p><a href="/privacy">[ privacy policy ]</a></p>
+  </section>
+</main>
