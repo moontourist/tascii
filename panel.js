@@ -33,3 +33,17 @@ input.addEventListener('keydown', async (e) => {
   save();
   render();
 });
+
+list.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const id = btn.closest('li').dataset.id;
+  if (btn.classList.contains('box')) {
+    const t = tasks.find((t) => t.id === id);
+    t.done = !t.done;
+  } else {
+    tasks = tasks.filter((t) => t.id !== id);
+  }
+  save();
+  render();
+});
