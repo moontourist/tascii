@@ -128,6 +128,11 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 ### v1.11.0: JetBrains Mono
 - Font is JetBrains Mono, using the copy installed on the computer (the Nerd Font Mono build first, for real bold), so nothing is downloaded. Falls back to the system monospace font if it isn't installed.
 
+### v1.12.0: preferences
+- `[ prefs ]` (or `p`) opens a box with the theme (gruvbox, dark, light) and text size (13 to 26px, `[-]`/`[+]` or the `-`/`+` keys). `Esc` closes it.
+- Saved per computer in localStorage and applied by `prefs.js` in the page head, so the panel never flashes the default theme or size first.
+- Every theme's text passes WCAG AA. The progress bar is 16 characters so it fits beside the count.
+
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.
 2. Click "Load unpacked" and pick this folder.

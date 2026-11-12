@@ -21,6 +21,9 @@ a minimalist ASCII to-do list for Chrome's side panel.
 - Click a task to cross it off. It moves to its tile's **history** as `[x]`; clicking it there brings it back.
 - `x` deletes a task into history as `[-]`, so it can come back too. `x` in history removes it for good. `u` undoes the last deletion.
 
+## Preferences
+`[ prefs ]` (or `p`) picks the theme (gruvbox, dark, light) and text size (13 to 26px). `+` and `-` change the size from anywhere.
+
 ## Keys
 tascii opens on your first task, ready for these. If keys do nothing, click the panel first: the hint line at the bottom says so when the web page has your keyboard.
 
@@ -36,6 +39,8 @@ tascii opens on your first task, ready for these. If keys do nothing, click the 
 | `J` / `K` (or shift `↓` / `↑`) | move the tile down / up |
 | `r` | rename the tile |
 | `N` | new tile |
+| `p` | preferences |
+| `+` / `-` | bigger / smaller text |
 
 Tasks are saved locally in Chrome and never leave your computer. The extension can't read websites or make network requests.
 

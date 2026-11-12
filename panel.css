@@ -1,4 +1,5 @@
-/* Colors: Gruvbox Material Dark, the custom theme imported into Rex from Ghostty. */
+/* Themes, picked in prefs (prefs.js sets data-theme on <html>).
+   gruvbox: Gruvbox Material Dark, the custom theme imported into Rex from Ghostty. */
 :root {
   --bg: #282828;     /* background */
   --text: #d4be98;   /* foreground, 8.2:1 */
@@ -10,13 +11,37 @@
   --dim: color-mix(in srgb, var(--text) 70%, var(--bg)); /* 4.8:1: dates, counts, hints, history */
   --tint: #d4be98;   /* selection background, with --bg text */
 }
+/* dark: neutral grays. */
+:root[data-theme="dark"] {
+  --bg: #1c1c1c;     /* text 13.7:1 */
+  --text: #e6e6e6;
+  --accent: #8ab4f8; /* 8.1:1 */
+  --ok: #81c995;     /* 8.7:1 */
+  --info: #fdd663;
+  --line: #5f6368;
+  --danger: #f28b82; /* 7.1:1 */
+  --dim: color-mix(in srgb, var(--text) 65%, var(--bg)); /* 6.4:1 */
+  --tint: #e6e6e6;
+}
+/* light: near-white paper. */
+:root[data-theme="light"] {
+  --bg: #fafafa;     /* text 15.8:1 */
+  --text: #1f1f1f;
+  --accent: #1a5fc8; /* 5.7:1 */
+  --ok: #137333;     /* 5.7:1 */
+  --info: #9a5b00;
+  --line: #b8b8b8;
+  --danger: #c5221f; /* 5.6:1 */
+  --dim: color-mix(in srgb, var(--text) 70%, var(--bg)); /* 5.9:1 */
+  --tint: #1f1f1f;
+}
 [hidden] { display: none !important; }
 * { box-sizing: border-box; }
 html {
   background: var(--bg);
   color: var(--text);
   /* Installed fonts only, nothing downloaded. The Nerd Font Mono build has every weight; plain JetBrains Mono is regular only. */
-  font: 15px/1.5 "JetBrainsMono NFM", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  font: var(--size, 15px)/1.5 "JetBrainsMono NFM", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 body { margin: 0; padding: 12px 14px; }
 ::selection { background: var(--tint); color: var(--bg); }
@@ -46,8 +71,26 @@ h1 { margin: 0; color: var(--accent); font: inherit; font-weight: bold; }
 #tiles.only .close { display: none; }
 .collapsed { padding: 6px; }
 .collapsed .body { display: none; }
-#add-tile { display: block; margin: 16px auto 0; padding: 6px 10px; color: var(--dim); text-align: center; }
-#add-tile:hover { color: var(--accent); }
+#actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 2ch; margin-top: 16px; }
+#actions button { padding: 6px 10px; color: var(--dim); white-space: nowrap; }
+#actions button:hover, #prefs-btn[aria-expanded="true"] { color: var(--accent); }
+
+/* Prefs: a box like a tile, with ASCII radio buttons ( ) (*). */
+#prefs { position: relative; margin-top: 22px; padding: 14px 10px 8px; border: 1px solid var(--accent); }
+#prefs .bar { cursor: default; }
+#prefs .bar span { color: var(--accent); font-weight: bold; }
+.pref { display: flex; align-items: flex-start; gap: 1ch; }
+.pref .key { flex: none; width: 6ch; line-height: 40px; color: var(--dim); }
+.opts { display: flex; flex-wrap: wrap; align-items: center; gap: 0 2ch; }
+.pref label { display: flex; align-items: center; min-height: 40px; cursor: pointer; }
+.pref input { position: absolute; opacity: 0; width: 0; height: 0; margin: 0; }
+.mark::before { content: "( ) "; color: var(--dim); white-space: pre; }
+input:checked + .mark::before { content: "(*) "; color: var(--accent); }
+input:focus-visible + .mark { outline: 1px solid var(--accent); }
+.pref button { min-height: 40px; color: var(--dim); }
+.pref button:hover { color: var(--accent); }
+.pref button:disabled { opacity: 0.4; cursor: default; }
+#size-out { min-width: 4ch; text-align: center; }
 
 .prompt { display: flex; gap: 1ch; align-items: center; min-height: 40px; padding: 0 4px; color: var(--accent); }
 input {
@@ -87,14 +130,14 @@ button:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
 .empty { margin: 4px 4px 8px; color: var(--dim); }
 
 /* Today's progress: [#######-------------] 2/5 */
-#progress { display: flex; justify-content: space-between; gap: 1ch; padding: 0 4px; color: var(--dim); white-space: pre; }
+#progress { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 1ch; padding: 0 4px; color: var(--dim); white-space: pre; }
 #fill { color: var(--ok); }
 #rest { color: var(--line); }
 
 .away h1 { color: var(--dim); }
 .away .tile:focus-within { border-color: var(--line); }
 .away .keys, :root:not(.away) .hint { display: none; }
-footer { margin-top: 16px; padding: 0 4px; color: var(--dim); font-size: 12px; text-align: center; }
+footer { margin-top: 16px; padding: 0 4px; color: var(--dim); font-size: 0.8em; text-align: center; }
 
 /* Finishing a task: the box spins [-] [\] [|] [/] [x] (panel.js), sparks fly,
    a green line strikes through, the row flashes, then slides away. */
@@ -116,7 +159,7 @@ footer { margin-top: 16px; padding: 0 4px; color: var(--dim); font-size: 12px; t
 @keyframes leave { to { opacity: 0; transform: translateX(8px); } }
 @keyframes gone { to { opacity: 0; transform: translateX(-8px); } }
 @keyframes enter { from { opacity: 0; transform: translateX(-6px); } }
-.spark { position: fixed; z-index: 1; pointer-events: none; font-size: 17px; font-weight: bold; }
+.spark { position: fixed; z-index: 1; pointer-events: none; font-size: 1.13em; font-weight: bold; }
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after { animation: none !important; transition: none !important; }
 }

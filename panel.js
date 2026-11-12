@@ -1,5 +1,8 @@
 const tilesEl = document.getElementById('tiles');
 const addTileBtn = document.getElementById('add-tile');
+const prefsBtn = document.getElementById('prefs-btn');
+const prefsBox = document.getElementById('prefs');
+const sizeOut = document.getElementById('size-out');
 const tileTpl = document.getElementById('tile').content.firstElementChild;
 const row = document.getElementById('row').content.firstElementChild;
 const today = document.getElementById('today');
@@ -127,7 +130,7 @@ function render() {
 const firstInput = () => tilesEl.querySelector('.new');
 
 // ASCII bar of tasks finished today. Grows one # at a time when it goes up.
-const BAR = 20;
+const BAR = 16; // fits beside "3/6 today" in a narrow panel, even with a scrollbar
 let shown = -1; // bar chars on screen; -1 until the first draw, which is instant
 let growing;
 function drawBar(n, total) {
@@ -427,15 +430,55 @@ function undoLast() {
   li?.querySelector('.task').focus();
 }
 
+// Prefs: theme and text size (the values live in prefs.js).
+function savePrefs() {
+  try {
+    localStorage.setItem('prefs', JSON.stringify(prefs));
+  } catch {} // can't save: still applies until the panel closes
+  applyPrefs();
+  showPrefs();
+}
+function showPrefs() {
+  prefsBox.querySelector(`input[value="${prefs.theme}"]`).checked = true;
+  sizeOut.textContent = `${prefs.size}px`;
+  document.getElementById('smaller').disabled = prefs.size === SIZES[0];
+  document.getElementById('bigger').disabled = prefs.size === SIZES.at(-1);
+}
+function resize(by) {
+  prefs.size = SIZES[Math.min(SIZES.length - 1, Math.max(0, SIZES.indexOf(prefs.size) + by))];
+  savePrefs();
+}
+function togglePrefs(open = prefsBox.hidden) {
+  prefsBox.hidden = !open;
+  prefsBtn.setAttribute('aria-expanded', open);
+  if (open) {
+    showPrefs();
+    prefsBox.querySelector('input:checked').focus();
+  }
+}
+prefsBtn.addEventListener('click', () => togglePrefs());
+prefsBox.addEventListener('change', (e) => {
+  prefs.theme = e.target.value;
+  savePrefs();
+});
+document.getElementById('smaller').addEventListener('click', () => resize(-1));
+document.getElementById('bigger').addEventListener('click', () => resize(1));
+
 // Keyboard: j/k (or arrows) move through tile headers, tasks and history toggles.
 // h/l move between a task and its x, space crosses off (or restores in history), x deletes (to history), u undoes a deletion,
 // i or / goes to the tile's input and Esc leaves it, r renames the tile,
-// J/K (or shift+arrows) move the tile, N adds a tile.
+// J/K (or shift+arrows) move the tile, N adds a tile, p opens prefs, +/- change the text size.
 const stops = () => [...document.querySelectorAll('.fold, .task, summary')].filter((el) => el.checkVisibility());
 const after = (el) => stops().find((s) => el.compareDocumentPosition(s) & Node.DOCUMENT_POSITION_FOLLOWING);
 document.addEventListener('keydown', (e) => {
   if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
   const a = document.activeElement;
+  if (e.key === 'Escape' && a.closest('#prefs')) {
+    togglePrefs(false);
+    prefsBtn.focus();
+    e.preventDefault();
+    return;
+  }
   const el = a.closest('.tile') ?? tilesEl.firstElementChild;
   if (a.matches('input')) {
     if (e.key === 'Escape' && a.matches('.title')) {
@@ -472,6 +515,9 @@ document.addEventListener('keydown', (e) => {
     case 'r': el?.querySelector('.title').focus(); el?.querySelector('.title').select(); break;
     case 'J': case 'K': if (!a.closest('.tile')) return; moveTile(tileFor(a), key === 'J' ? 1 : -1); break;
     case 'N': addTile(); break;
+    case 'p': togglePrefs(); break;
+    case '+': case '=': resize(1); break;
+    case '-': resize(-1); break;
     default: return;
   }
   e.preventDefault();

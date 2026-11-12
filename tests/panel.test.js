@@ -1,4 +1,4 @@
-// Runs inside the panel page (see run.mjs). Uses panel.js's globals: tally, fill, rest, wait.
+// Runs inside the panel page (see run.mjs). Uses globals from panel.js (tally, fill, rest, wait) and prefs.js (prefs, readPrefs, applyPrefs).
 const results = [];
 const check = (name, ok) => results.push(`${ok ? 'ok  ' : 'FAIL'} ${name}`);
 // Animation lengths in panel.js, plus a margin.
@@ -92,7 +92,7 @@ async function main() {
   check('history count shows', q('.count').textContent === '1' && !q('.history').hidden);
   check('history shows the finish date', rows(0, '.done')[0].querySelector('.when').textContent !== '');
   await wait(300); // the bar grows one # at a time
-  check('progress bar counts today', tally.textContent === '1/2 today' && fill.textContent === '#'.repeat(10) && rest.textContent === '-'.repeat(10));
+  check('progress bar counts today', tally.textContent === '1/2 today' && fill.textContent === '#'.repeat(8) && rest.textContent === '-'.repeat(8));
   task(0, 0, '.done').click();
   await wait(RESTORE);
   check('clicking a history task puts it back', texts().includes('old task') && q('.history').hidden);
@@ -203,6 +203,32 @@ async function main() {
   check('x deletes the selected task', rows().length === 0 && __store.tasks.find((t) => t.id === 'z').deleted);
   check('empty list shows a message', !q('.empty').hidden);
   check('focus returns to the input when a list empties', focused() === q('.new'));
+
+  // Prefs.
+  const box = document.getElementById('prefs');
+  const root = () => getComputedStyle(document.documentElement);
+  document.getElementById('prefs-btn').click();
+  check('prefs opens on the current theme', !box.hidden && focused() === box.querySelector('input[value="gruvbox"]'));
+  box.querySelector('input[value="light"]').click();
+  check('picking a theme applies and saves it', document.documentElement.dataset.theme === 'light'
+    && JSON.parse(localStorage.getItem('prefs')).theme === 'light' && root().backgroundColor === 'rgb(250, 250, 250)');
+  document.getElementById('bigger').click();
+  check('[+] makes text bigger and saves it', root().fontSize === '17px' && JSON.parse(localStorage.getItem('prefs')).size === 17);
+  key('Escape');
+  check('Esc closes prefs', box.hidden && focused() === document.getElementById('prefs-btn'));
+  key('-');
+  key('-');
+  key('-');
+  check('- shrinks text and stops at the smallest', root().fontSize === '13px');
+  key('+');
+  check('+ grows text', root().fontSize === '15px');
+  key('p');
+  check('p opens prefs', !box.hidden);
+  localStorage.setItem('prefs', '{"theme":"<script>","size":9999}');
+  prefs = readPrefs();
+  applyPrefs();
+  check('security: junk prefs fall back to the defaults', document.documentElement.dataset.theme === 'gruvbox' && root().fontSize === '15px');
+  localStorage.removeItem('prefs');
 }
 
 async function corrupt() {
