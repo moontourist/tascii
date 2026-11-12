@@ -1,0 +1,138 @@
+/* tascii-list.com. Gruvbox Material Dark, the extension's default theme.
+   The page is a tiling desktop: boxed windows with gaps, titles set into the border,
+   and a yellow border on the window under the mouse, like Hyprland. */
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono-extrabold.woff2") format("woff2");
+  font-weight: 800;
+  font-display: swap;
+}
+:root {
+  --desk: #1d2021;   /* behind the windows */
+  --bg: #282828;     /* window */
+  --text: #d4be98;   /* 8.2:1 on --bg */
+  --accent: #d8a657; /* 6.7:1 */
+  --ok: #a9b665;     /* 6.7:1 */
+  --line: #7c6f64;
+  --dim: color-mix(in srgb, var(--text) 70%, var(--bg)); /* 4.8:1 */
+  --gap: 12px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html {
+  background: var(--desk);
+  color: var(--text);
+  font: 16px/1.6 "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  -webkit-text-size-adjust: 100%;
+}
+body { margin: 0; }
+::selection { background: var(--text); color: var(--bg); }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:hover { color: var(--text); }
+a:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+p { margin: 0; }
+
+.desk {
+  display: grid;
+  gap: calc(var(--gap) * 1.6) var(--gap);
+  padding: calc(var(--gap) * 1.6) var(--gap) var(--gap);
+  min-height: 100dvh;
+  grid-template-areas: "hero" "demo" "keys" "private";
+}
+
+/* A window: a box with its title cut into the top border. */
+.win {
+  position: relative;
+  min-width: 0;
+  padding: 26px 22px 20px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  transition: border-color 0.15s;
+}
+.win:hover, .win:focus-within,
+.desk:not(:has(.win:hover, .win:focus-within)) .hero { border-color: var(--accent); }
+.bar {
+  position: absolute;
+  top: -0.8em;
+  left: 12px;
+  margin: 0;
+  padding: 0 1ch;
+  background: var(--bg);
+  font: inherit;
+  font-weight: 800;
+}
+.win:hover .bar, .win:focus-within .bar,
+.desk:not(:has(.win:hover, .win:focus-within)) .hero .bar { color: var(--accent); }
+
+.hero { grid-area: hero; display: flex; flex-direction: column; justify-content: center; gap: 22px; }
+.logo { margin: 0; font-size: inherit; }
+.art {
+  display: block;
+  white-space: pre;
+  color: var(--accent);
+  /* 27 columns wide; fills the window on a phone, stops growing on a big screen. */
+  font-size: clamp(13px, calc((100vw - 90px) / 16.4), 30px);
+  line-height: 1;
+}
+.sr {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+.lede { font-size: 1.25rem; line-height: 1.45; font-weight: 800; max-width: 34ch; text-wrap: balance; }
+.about { color: var(--dim); max-width: 60ch; }
+.about .x { color: var(--ok); }
+.cta { display: flex; flex-wrap: wrap; gap: 6px 2ch; margin-left: -10px; }
+.cta a { padding: 6px 10px; text-decoration: none; white-space: nowrap; }
+.cta a:first-child { font-weight: 800; }
+.cta a + a { color: var(--text); }
+.cta a:hover { color: var(--text); background: color-mix(in srgb, var(--text) 10%, var(--bg)); }
+.fine { color: var(--dim); font-size: 0.875rem; }
+
+/* The demo is the real panel in a frame, sized like Chrome's side panel. */
+.demo { grid-area: demo; display: flex; flex-direction: column; padding: 18px 0 0; height: 640px; }
+.demo iframe { flex: 1; width: 100%; border: 0; display: block; background: var(--bg); }
+.demo .bar .note { color: var(--dim); font-weight: 400; }
+
+.keys { grid-area: keys; }
+.keys dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 3ch; margin: 0; }
+.keys dt { color: var(--accent); }
+.keys dd { margin: 0; color: var(--dim); }
+
+.private { grid-area: private; display: flex; flex-direction: column; gap: 12px; }
+.private p:first-of-type { font-weight: 800; }
+.private .about { flex: 1; }
+
+/* Two columns: the demo beside keys and privacy. */
+@media (min-width: 720px) {
+  .desk {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+    grid-template-areas: "hero hero" "keys demo" "private demo";
+  }
+  .demo { height: auto; min-height: 560px; }
+}
+/* Wide: the whole page fits the screen, the demo on the right where the side panel sits. */
+@media (min-width: 1080px) {
+  :root { --gap: 14px; }
+  .desk {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(340px, 400px);
+    grid-template-rows: 1.6fr 1fr;
+    grid-template-areas: "hero hero demo" "keys private demo";
+  }
+  .win { padding: 30px 32px 24px; }
+  .hero { padding-left: 48px; }
+  .art { font-size: clamp(18px, 2.3vw, 34px); }
+  .lede { font-size: 1.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .win { transition: none; }
+}
+
+/* A single window, for text pages like the privacy policy. */
+.desk.page { grid-template: auto / minmax(0, 76ch); grid-template-areas: "hero"; justify-content: center; align-content: center; }
+.page .about { color: var(--text); }

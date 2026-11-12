@@ -1,6 +1,7 @@
 // Draws the extension icons and the Chrome Web Store images with headless Chrome.
 // Run from the repo root: node store/render.mjs   (set CHROME=/path/to/chrome if needed)
-// Writes icons/icon-{16,32,48,128}.png and store/screenshot-{1,2,3}.png, store/promo-440x280.png.
+// Writes icons/icon-{16,32,48,128}.png, store/screenshot-{1,2,3}.png, store/promo-440x280.png,
+// and site/public/og.png (the picture shown when tascii-list.com is shared).
 import { writeFileSync, mkdtempSync, mkdirSync, rmSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
@@ -88,5 +89,15 @@ shoot('promo', `<div style="position:absolute;inset:0;background:${C.bg};color:$
   <div style="font-size:17px;color:${C.dim};line-height:1.5">a minimalist ASCII to-do list<br>for Chrome's side panel</div>
   <div style="font-size:15px;color:${C.line}">────────────────────────────────</div></div>`,
 440, 280, join(root, 'store', 'promo-440x280.png'));
+
+// --- Link preview for the website, 1200x630. The block logo comes from the README. ---
+const logo = readFileSync(join(root, 'README.md'), 'utf8').split('\n').slice(1, 9).filter((l) => l.trim()).join('\n');
+shoot('og', `<div style="position:absolute;inset:0;background:#1d2021;padding:28px">
+  <div style="position:relative;height:100%;background:${C.bg};border:2px solid ${C.accent};display:flex;flex-direction:column;justify-content:center;gap:34px;padding:0 84px">
+    <div style="position:absolute;top:-15px;left:24px;padding:0 12px;background:${C.bg};color:${C.accent};font-size:22px;font-weight:800;line-height:1.2">tascii-list.com</div>
+    <pre style="margin:0;font:inherit;font-size:40px;line-height:1;color:${C.accent}">${logo}</pre>
+    <div style="font-size:36px;font-weight:800;color:${C.text};line-height:1.35">a minimalist ASCII to-do list<br>for Chrome's side panel</div>
+    <div style="font-size:26px;color:${C.dim}"><span style="color:${C.ok}">[x]</span> free, open source, private</div></div></div>`,
+1200, 630, join(root, 'site', 'public', 'og.png'));
 
 rmSync(tmp, { recursive: true, force: true });

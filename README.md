@@ -48,6 +48,9 @@ Tasks are saved locally in Chrome and never leave your computer. The extension c
 ## Publish to the Chrome Web Store
 `./pack.sh` runs the tests and builds `tascii-v<version>.zip` with only the extension files. `store/listing.md` has the listing text and privacy answers, and `node store/render.mjs` redraws the icons, screenshots and promo tile.
 
+## Website
+`site/` is tascii-list.com, hosted on Cloudflare Pages (build command `sh site/build.sh`, output `site/dist`). Its live demo is this panel, built in by `site/build.sh`. Website releases are tagged `site-vX.Y.Z`.
+
 ## Test
 `node tests/run.mjs` checks permissions, the security policy, that the version matches the git tag, and banned code patterns. It then runs the panel in headless Chrome with fake storage, HTML-injection attempts and corrupted data.
 

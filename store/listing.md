@@ -38,7 +38,7 @@ Open source: https://github.com/moontourist/tascii
 - Screenshots (1280x800): `store/screenshot-1.png`, `store/screenshot-2.png`, `store/screenshot-3.png`
 - Small promo tile (440x280): `store/promo-440x280.png`
 
-**Homepage URL:** https://github.com/moontourist/tascii
+**Homepage URL:** https://tascii-list.com
 
 ## Privacy tab
 
@@ -65,7 +65,7 @@ A to-do list shown in Chrome's side panel.
 - does not use or transfer user data for purposes unrelated to the item's single purpose
 - does not use or transfer user data to determine creditworthiness or for lending
 
-**Privacy policy URL:** not required when no user data is collected. If the form insists, link the README's privacy line on GitHub.
+**Privacy policy URL:** https://tascii-list.com/privacy
 
 ## Updating later
 1. Bump `version` in `manifest.json`, commit, and tag `v<version>`.
