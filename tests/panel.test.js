@@ -35,6 +35,37 @@ async function main() {
   check('Enter adds a task to its tile', texts().join() === 'old task,second' && __store.tasks[1].tile === 'main');
   check('ignores blank input', __store.tasks.length === 2);
 
+  // Editing: click the words to fix them.
+  const label = (n) => rows()[n].querySelector('.label');
+  const edit = () => q('.edit');
+  const press = (el, k) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+  label(1).click();
+  check('clicking the words starts editing', edit() && focused() === edit() && edit().value === 'second');
+  edit().value = 'secnod';
+  press(edit(), 'Enter');
+  check('Enter saves the edit', texts()[1] === 'secnod' && __store.tasks[1].text === 'secnod' && !edit() && focused() === task(1));
+  key('e');
+  check('e edits the selected task', edit() && focused() === edit());
+  edit().value = 'nope';
+  press(edit(), 'Escape');
+  check('Esc cancels the edit', texts()[1] === 'secnod' && !edit() && focused() === task(1));
+  label(1).click();
+  edit().value = '   ';
+  edit().blur();
+  check('an empty edit keeps the old words', texts()[1] === 'secnod' && !edit());
+  label(1).click();
+  edit().value = '<img src=x onerror="window.__pwned=1">';
+  press(edit(), 'Enter');
+  await wait(50);
+  check('security: HTML typed into an edit stays text', !document.querySelector('li img') && !window.__pwned && texts()[1].startsWith('<img'));
+  label(1).click();
+  edit().value = 'second';
+  render(); // e.g. another window saved something mid-edit
+  check('an edit survives a redraw', edit() && focused() === edit() && edit().value === 'second');
+  edit().blur();
+  check('clicking away saves the edit', texts()[1] === 'second' && __store.tasks[1].text === 'second');
+  check('clicking a task\'s words does not cross it off', !__store.tasks.some((t) => t.done));
+
   // Security: task text must never turn into HTML or run code.
   const payloads = [
     '<img src=x onerror="window.__pwned=1">',

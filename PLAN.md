@@ -133,6 +133,10 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 - Saved per computer in localStorage and applied by `prefs.js` in the page head, so the panel never flashes the default theme or size first.
 - Every theme's text passes WCAG AA. The progress bar is 16 characters so it fits beside the count.
 
+### v1.13.0: edit a task
+- Click a task's words (or press `e`) to edit them in place, with the cursor where you clicked and the spellchecker on. Enter or clicking away saves, Esc cancels, and an empty edit keeps the old words.
+- Clicking the `[ ]` or the space after the words still crosses the task off. Finished and deleted tasks in history aren't editable; restore one first.
+
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.
 2. Click "Load unpacked" and pick this folder.

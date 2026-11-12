@@ -95,6 +95,8 @@ function render() {
     near: (li.nextElementSibling ?? li.previousElementSibling)?.dataset.id,
     part: a.matches('.del') ? '.del' : '.task',
   };
+  // A task being edited is rebuilt too: reopen it with what was typed so far.
+  const editing = a?.matches('.edit') && { id: li.dataset.id, value: a.value, sel: [a.selectionStart, a.selectionEnd] };
 
   tiles.forEach((tile, i) => {
     let el = tileEls.get(tile.id);
@@ -125,6 +127,51 @@ function render() {
   const find = (id) => [...was.ul.children].find((x) => x.dataset.id === id)?.querySelector(was.part);
   const fallback = was.ul.isConnected ? was.ul.closest('.tile').querySelector('.new') : firstInput();
   (find(was.id) ?? find(was.near) ?? fallback)?.focus();
+  if (editing) {
+    const row = find(editing.id)?.closest('li');
+    if (row) startEdit(row, editing);
+  }
+}
+
+// Editing a task's words in place: Enter or clicking away saves, Esc cancels.
+// `from` is the click (to put the cursor where it landed) or { value, sel } when reopening after a redraw.
+function startEdit(li, from = {}) {
+  const t = tasks.find((x) => x.id === li.dataset.id);
+  if (!t || inHistory(t) || li.classList.contains('leaving') || li.querySelector('.edit')) return;
+  const input = document.createElement('input');
+  input.className = 'edit';
+  input.maxLength = 500;
+  input.autocomplete = 'off';
+  input.spellcheck = true; // underline the misspelling you came to fix
+  input.setAttribute('aria-label', 'Edit task');
+  input.value = from.value ?? t.text;
+  const hit = from.clientX !== undefined && document.caretPositionFromPoint?.(from.clientX, from.clientY);
+  const at = hit && li.querySelector('.label').contains(hit.offsetNode) ? hit.offset : input.value.length;
+  li.classList.add('editing');
+  li.querySelector('.task').after(input);
+  input.focus();
+  input.setSelectionRange(...(from.sel ?? [at, at]));
+  let finished = false;
+  const finish = (keep) => {
+    if (finished) return;
+    finished = true;
+    const text = input.value.trim();
+    if (keep && text && text !== t.text) {
+      t.text = text;
+      save();
+    }
+    li.querySelector('.label').textContent = t.text;
+    li.classList.remove('editing');
+    input.remove();
+  };
+  input.addEventListener('keydown', (e) => {
+    if (e.isComposing || (e.key !== 'Enter' && e.key !== 'Escape')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    finish(e.key === 'Enter');
+    li.querySelector('.task').focus();
+  });
+  input.addEventListener('blur', () => finish(true));
 }
 
 const firstInput = () => tilesEl.querySelector('.new');
@@ -217,8 +264,10 @@ tilesEl.addEventListener('click', (e) => {
     render();
   } else if (btn.matches('.close')) {
     closeTile(btn, tile);
+  } else if (e.target.closest('.label') && btn.closest('.open')) {
+    startEdit(btn.closest('li'), e); // the words: edit them
   } else {
-    onRowClick(btn);
+    onRowClick(btn); // the box or the space around it: cross off
   }
 });
 
@@ -465,7 +514,7 @@ document.getElementById('smaller').addEventListener('click', () => resize(-1));
 document.getElementById('bigger').addEventListener('click', () => resize(1));
 
 // Keyboard: j/k (or arrows) move through tile headers, tasks and history toggles.
-// h/l move between a task and its x, space crosses off (or restores in history), x deletes (to history), u undoes a deletion,
+// h/l move between a task and its x, space crosses off (or restores in history), x deletes (to history), u undoes a deletion, e edits the words,
 // i or / goes to the tile's input and Esc leaves it, r renames the tile,
 // J/K (or shift+arrows) move the tile, N adds a tile, p opens prefs, +/- change the text size.
 const stops = () => [...document.querySelectorAll('.fold, .task, summary')].filter((el) => el.checkVisibility());
@@ -502,6 +551,7 @@ document.addEventListener('keydown', (e) => {
     case ' ': if (!li) return; li.querySelector('.task').click(); break; // headers and history keep their own space
     case 'x': if (!li) return; li.querySelector('.del').click(); break;
     case 'u': undoLast(); break;
+    case 'e': if (!li) return; startEdit(li); break;
     case 'i': case '/': {
       const tile = tileFor(el);
       if (tile?.collapsed) {
