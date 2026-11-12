@@ -45,6 +45,11 @@ const allowed = [`${GITHUB} (panel.html)`, `${GITHUB} (manifest.json)`]; // the 
 const stray = urls.filter((u) => !allowed.includes(u));
 check(`source: no outside URLs except the GitHub link${stray.length ? ` (found ${stray.join(', ')})` : ''}`, stray.length === 0);
 const html = read('panel.html');
+// Every file the extension uses must go into the store zip.
+const pack = read('pack.sh');
+const needed = [...sources, ...Object.values(m.icons)];
+const missing = needed.filter((f) => !pack.includes(f));
+check(`pack: zip includes every extension file${missing.length ? ` (missing ${missing.join(', ')})` : ''}`, missing.length === 0);
 check('source: GitHub link opens a new tab without access to this page',
   html.includes(`<a id="github" href="${GITHUB}" target="_blank" rel="noopener noreferrer"`));
 check('source: no inline scripts or on* handlers in HTML', !/<script(?![^>]*\bsrc=)[^>]*>|\son\w+=/i.test(html));

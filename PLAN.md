@@ -141,6 +141,11 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 - `[ github ]` next to `[ + tile ]` and `[ prefs ]` opens the repo in a new tab. The manifest's `homepage_url` points there too.
 - The test that bans outside URLs allows exactly that link.
 
+### v1.15.0: Chrome Web Store prep
+- `[x]` icons at 16, 32, 48 and 128px (the toolbar shows these instead of a plain letter).
+- `./pack.sh` runs the tests, then zips only the extension files as `tascii-v<version>.zip`. A test checks the zip list covers every file the extension uses.
+- `store/`: three 1280x800 screenshots, a 440x280 promo tile, `listing.md` (description, privacy answers, permission reasons), and `render.mjs`, which redraws all images from the real panel.
+
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.
 2. Click "Load unpacked" and pick this folder.
