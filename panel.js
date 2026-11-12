@@ -147,8 +147,16 @@ function drawBar(n, total) {
 chrome.storage.local.get({ tasks: [], tiles: [] }).then((r) => {
   [tasks, tiles] = clean(r.tasks, r.tiles);
   render();
-  if (document.activeElement === document.body) firstInput()?.focus();
+  // Open ready for hjkl on the first task. With no tasks, open ready to type.
+  if (document.activeElement === document.body) (stops().find((el) => el.matches('.task')) ?? firstInput())?.focus();
 });
+
+// Keys only reach the panel while it has focus (clicking the web page takes it away).
+// Show that like an inactive window: dim title, plain borders, and a hint to click.
+const showFocus = () => document.documentElement.classList.toggle('away', !document.hasFocus());
+addEventListener('focus', showFocus);
+addEventListener('blur', showFocus);
+showFocus();
 
 // A panel open in another window changed something: show its version.
 chrome.storage.onChanged.addListener((changes, area) => {
@@ -318,7 +326,7 @@ async function spin(box, frames) {
 
 // A little burst of ASCII sparks flying out of the box.
 const SPARKS = ['*', '+', '.', "'", '*', '+', '.', '`'];
-const SPARK_COLORS = ['var(--yellow)', 'var(--green)', 'var(--aqua)', 'var(--orange)'];
+const SPARK_COLORS = ['var(--accent)', 'var(--text)', 'var(--line)', 'var(--accent)'];
 function burst(box) {
   const r = box.getBoundingClientRect();
   SPARKS.forEach((ch, i) => {

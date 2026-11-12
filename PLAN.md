@@ -105,6 +105,11 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 - Muted text is now Gruvbox `#a89984` instead of `#928374`, so it passes the WCAG AA contrast minimum (4.5:1).
 - Needs Chrome 123+ (for name fields that size to their text).
 
+### v1.8.0: your palette, and keys that work on open
+- Colors are only the Gruvbox-Dark palette by glenntatum: `#3c3836` background, `#8ec07c` aqua text, `#d79921` yellow accents, `#458588` blue lines, `#cc241d` red for delete. Blue and red stay off text because they're hard to read on the background.
+- The panel opens on the first task, so hjkl work straight away. `i` goes to the input.
+- When the panel doesn't have keyboard focus (you clicked the web page), the title dims, borders go blue, and the hint line says to click the panel.
+
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.
 2. Click "Load unpacked" and pick this folder.

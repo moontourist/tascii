@@ -27,7 +27,7 @@ const pointer = (type, el, y) => (el ?? window).dispatchEvent(new PointerEvent(t
 async function main() {
   await wait(20);
   check('old tasks move into a first tile', names().join() === 'todo' && texts().join() === 'old task');
-  check('the input is focused on open', focused() === q('.new'));
+  check('opens on the first task, ready for hjkl', focused() === task(0));
   check('a single tile has no delete button', getComputedStyle(q('.close')).display === 'none');
   type('second');
   type('   ');

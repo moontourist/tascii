@@ -22,6 +22,8 @@ a minimalist ASCII to-do list for Chrome's side panel.
 - Click `x` to delete a task for good.
 
 ## Keys
+tascii opens on your first task, ready for these. If keys do nothing, click the panel first: the hint line at the bottom says so when the web page has your keyboard.
+
 | Key | Does |
 |---|---|
 | `Esc` or `↓` | leave the input and go to the list |
