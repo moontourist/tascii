@@ -243,8 +243,10 @@ async function main() {
   box.querySelector('input[value="light"]').click();
   check('picking a theme applies and saves it', document.documentElement.dataset.theme === 'light'
     && JSON.parse(localStorage.getItem('prefs')).theme === 'light' && root().backgroundColor === 'rgb(250, 250, 250)');
+  check('a new theme wipes in', __wipes === 1);
   document.getElementById('bigger').click();
   check('[+] makes text bigger and saves it', root().fontSize === '17px' && JSON.parse(localStorage.getItem('prefs')).size === 17);
+  check('a size change does not wipe', __wipes === 1);
   key('Escape');
   check('Esc closes prefs', box.hidden && focused() === document.getElementById('prefs-btn'));
   key('-');
