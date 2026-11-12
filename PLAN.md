@@ -94,6 +94,17 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 ### v1.6.1
 - Removed the empty-list cat; an empty list just says `nothing to do.`
 
+## Round 4: tiles
+
+### v1.7.0: Hyprland-style tiles
+- Each tile is its own to-do list in a box, with its title set into the top border and gaps between tiles. The focused tile's border turns yellow.
+- Click the name to rename it, `-`/`+` to collapse it (a collapsed tile shows its open count), and `x` to delete it. A tile with tasks asks first (`del 3?`).
+- Drag a tile's bar, or press `J`/`K`, to move it. The other tiles slide into place.
+- `[ + tile ]` or `N` adds a tile with its name ready to type.
+- Storage gains a `tiles` list and each task a `tile` id. Tasks from older versions land in the first tile, named `todo`.
+- Muted text is now Gruvbox `#a89984` instead of `#928374`, so it passes the WCAG AA contrast minimum (4.5:1).
+- Needs Chrome 123+ (for name fields that size to their text).
+
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.
 2. Click "Load unpacked" and pick this folder.

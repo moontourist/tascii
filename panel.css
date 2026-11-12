@@ -2,7 +2,7 @@
   --bg: #282828;
   --bg1: #3c3836;
   --fg: #ebdbb2;
-  --muted: #928374;
+  --muted: #a89984;
   --yellow: #fabd2f;
   --green: #b8bb26;
   --red: #fb4934;
@@ -23,9 +23,29 @@ header { display: flex; justify-content: space-between; align-items: baseline; g
 h1 { margin: 0; color: var(--yellow); font: inherit; font-weight: bold; }
 #today { color: var(--muted); }
 
-/* Fixed-length rule: add characters if the panel ever gets wider than ~120 columns. */
-.rule { overflow: hidden; white-space: nowrap; color: var(--bg1); user-select: none; }
-.rule::before { content: "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"; }
+/* Tiles: boxed windows with the title set into the top border, like ┌─ - todo ──── 3 ─ x ┐.
+   The focused tile's border turns yellow. Drag the bar or press J/K to move one. */
+#tiles { display: flex; flex-direction: column; gap: 18px; margin-top: 22px; }
+.tile { position: relative; padding: 14px 6px 6px; border: 1px solid var(--bg1); transition: border-color 0.15s; }
+.tile:focus-within, .dragging { border-color: var(--yellow); }
+.dragging { z-index: 1; box-shadow: 0 8px 20px rgb(0 0 0 / 0.4); }
+.bar { position: absolute; top: -0.78em; left: 8px; right: 8px; display: flex; align-items: center; cursor: grab; user-select: none; }
+.dragging .bar { cursor: grabbing; }
+.bar > * { flex: none; padding: 0 0.6ch; background: var(--bg); }
+.fold { color: var(--muted); }
+.fold:hover { color: var(--yellow); }
+.title { field-sizing: content; min-width: 5ch; max-width: 60%; font-weight: bold; cursor: text; }
+.tile:focus-within .title { color: var(--yellow); }
+.n { margin-left: auto; color: var(--muted); }
+.n:empty { padding: 0; }
+.close { color: var(--muted); visibility: hidden; }
+.tile:hover .close, .tile:focus-within .close { visibility: visible; }
+.close:hover, .close.confirm { color: var(--red); }
+#tiles.only .close { display: none; }
+.collapsed { padding: 6px; }
+.collapsed .body { display: none; }
+#add-tile { display: block; margin: 16px auto 0; padding: 6px 10px; color: var(--muted); text-align: center; }
+#add-tile:hover { color: var(--yellow); }
 
 .prompt { display: flex; gap: 1ch; align-items: center; min-height: 40px; padding: 0 4px; color: var(--yellow); }
 input {
@@ -62,14 +82,14 @@ button:focus-visible { outline: 1px solid var(--yellow); outline-offset: -1px; }
 .del:hover { color: var(--red); }
 .done .box { color: var(--green); }
 .done .text { color: var(--muted); text-decoration: line-through; }
-#empty { margin: 12px 4px; color: var(--muted); }
+.empty { margin: 4px 4px 8px; color: var(--muted); }
 
 /* Today's progress: [#######-------------] 2/5 */
 #progress { display: flex; justify-content: space-between; gap: 1ch; padding: 0 4px; color: var(--muted); white-space: pre; }
 #fill { color: var(--green); }
 #rest { color: var(--bg1); }
 
-footer { margin-top: 16px; padding: 0 4px; color: var(--muted); font-size: 12px; opacity: 0.7; }
+footer { margin-top: 16px; padding: 0 4px; color: var(--muted); font-size: 12px; text-align: center; }
 
 /* Finishing a task: the box spins [-] [\] [|] [/] [x] (panel.js), sparks fly,
    a green line strikes through, the row flashes, then slides away. */
@@ -97,10 +117,10 @@ footer { margin-top: 16px; padding: 0 4px; color: var(--muted); font-size: 12px;
 }
 
 .when { flex: none; color: var(--muted); }
-#history { margin-top: 8px; }
+.history { margin-top: 4px; }
 summary { padding: 8px 4px; border-radius: 3px; color: var(--muted); list-style: none; cursor: pointer; }
 summary::-webkit-details-marker { display: none; }
 summary::before { content: "+ "; }
-#history[open] summary::before { content: "- "; }
+.history[open] summary::before { content: "- "; }
 summary:hover { background: var(--bg1); color: var(--fg); }
 summary:focus-visible { outline: 1px solid var(--yellow); outline-offset: -1px; }

@@ -5,12 +5,17 @@
 <link rel="stylesheet" href="panel.css">
 <header><h1>tascii</h1><time id="today"></time></header>
 <div id="progress" hidden><span aria-hidden="true">[<span id="fill"></span><span id="rest"></span>]</span><span id="tally"></span></div>
-<div class="rule" aria-hidden="true"></div>
-<label class="prompt"><span aria-hidden="true">&gt;</span><input id="new" placeholder="add a task" autocomplete="off" maxlength="500" aria-label="New task" autofocus></label>
-<div class="rule" aria-hidden="true"></div>
-<ul id="list"></ul>
-<p id="empty" hidden>nothing to do.</p>
-<details id="history" hidden><summary>history (<span id="count">0</span>)</summary><ul id="done"></ul></details>
-<footer aria-hidden="true">j/k move · spc done · l⏎ del · i add</footer>
+<main id="tiles"></main>
+<button id="add-tile">[ + tile ]</button>
+<footer aria-hidden="true">j/k move · spc done · i add · J/K tile</footer>
+<template id="tile"><section class="tile">
+  <div class="bar"><button class="fold"></button><input class="title" maxlength="40" aria-label="Tile name" spellcheck="false" autocomplete="off"><span class="n"></span><button class="close" aria-label="Delete tile">x</button></div>
+  <div class="body">
+    <label class="prompt"><span aria-hidden="true">&gt;</span><input class="new" placeholder="add a task" autocomplete="off" maxlength="500" aria-label="New task"></label>
+    <ul class="open"></ul>
+    <p class="empty" hidden>nothing to do.</p>
+    <details class="history" hidden><summary>history (<span class="count">0</span>)</summary><ul class="done"></ul></details>
+  </div>
+</section></template>
 <template id="row"><li><button class="task"><span class="box" aria-hidden="true"></span><span class="text"><span class="label"></span></span><span class="when"></span></button><button class="del" aria-label="Delete">x</button></li></template>
 <script src="panel.js"></script>
