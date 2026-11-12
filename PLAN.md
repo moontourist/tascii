@@ -137,6 +137,10 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 - Click a task's words (or press `e`) to edit them in place, with the cursor where you clicked and the spellchecker on. Enter or clicking away saves, Esc cancels, and an empty edit keeps the old words.
 - Clicking the `[ ]` or the space after the words still crosses the task off. Finished and deleted tasks in history aren't editable; restore one first.
 
+### v1.14.0: GitHub link
+- `[ github ]` next to `[ + tile ]` and `[ prefs ]` opens the repo in a new tab. The manifest's `homepage_url` points there too.
+- The test that bans outside URLs allows exactly that link.
+
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.
 2. Click "Load unpacked" and pick this folder.

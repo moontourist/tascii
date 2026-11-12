@@ -72,8 +72,9 @@ h1 { margin: 0; color: var(--accent); font: inherit; font-weight: bold; }
 .collapsed { padding: 6px; }
 .collapsed .body { display: none; }
 #actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 2ch; margin-top: 16px; }
-#actions button { padding: 6px 10px; color: var(--dim); white-space: nowrap; }
-#actions button:hover, #prefs-btn[aria-expanded="true"] { color: var(--accent); }
+#actions button, #actions a { padding: 6px 10px; color: var(--dim); white-space: nowrap; text-decoration: none; }
+#actions a:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
+#actions button:hover, #actions a:hover, #prefs-btn[aria-expanded="true"] { color: var(--accent); }
 
 /* Prefs: a box like a tile, with ASCII radio buttons ( ) (*). */
 #prefs { position: relative; margin-top: 22px; padding: 14px 10px 8px; border: 1px solid var(--accent); }
