@@ -1,5 +1,5 @@
 # tascii plan (Chrome extension)
-
+tests
 A minimalist, ASCII-style to-do list in Chrome's side panel. Gruvbox dark colors. Plain HTML, CSS and JavaScript: no frameworks, no libraries, no build step, no internet requests.
 
 ## Speed rules
