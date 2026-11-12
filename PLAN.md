@@ -122,6 +122,9 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 - Deleted tasks don't count toward today's progress.
 - Colors now come from the Rex terminal theme gruvbox-starship: `#282828` background, `#fbf1c7` text, `#d79921` yellow, `#98971a` green, `#83a598` blue, `#665c54` lines, `#cc241d` red. Delete shows as cream on a red chip, since red text is hard to read on this background. All text passes WCAG AA.
 
+### v1.10.1: the right theme
+- Colors are Gruvbox Material Dark, the custom theme imported into Rex from Ghostty: `#282828` background, `#d4be98` text, `#d8a657` yellow, `#a9b665` green, `#7daea3` blue, `#7c6f64` lines, `#ea6962` red. Red is readable here, so delete is plain red text again.
+
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.
 2. Click "Load unpacked" and pick this folder.

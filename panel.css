@@ -1,14 +1,14 @@
-/* Colors: the Rex terminal theme gruvbox-starship (~/.config/rex/gruvbox-starship). */
+/* Colors: Gruvbox Material Dark, the custom theme imported into Rex from Ghostty. */
 :root {
   --bg: #282828;     /* background */
-  --text: #fbf1c7;   /* foreground, 13:1 */
-  --accent: #d79921; /* yellow, 5.9:1: titles, prompt, focus */
-  --ok: #98971a;     /* green, 4.8:1: done, progress, strike line */
-  --info: #83a598;   /* bright blue, 5.5:1: sparks */
-  --line: #665c54;   /* selection background: borders and decoration */
-  --danger: #cc241d; /* red: delete only */
-  --dim: color-mix(in srgb, var(--text) 60%, var(--bg)); /* 5.7:1: dates, counts, hints, history */
-  --tint: #665c54;   /* text selection */
+  --text: #d4be98;   /* foreground, 8.2:1 */
+  --accent: #d8a657; /* yellow, 6.7:1: titles, prompt, focus */
+  --ok: #a9b665;     /* green, 6.7:1: done, progress, strike line */
+  --info: #7daea3;   /* blue, 5.9:1: sparks */
+  --line: #7c6f64;   /* bright black: borders and decoration */
+  --danger: #ea6962; /* red, 4.7:1: delete */
+  --dim: color-mix(in srgb, var(--text) 70%, var(--bg)); /* 4.8:1: dates, counts, hints, history */
+  --tint: #d4be98;   /* selection background, with --bg text */
 }
 [hidden] { display: none !important; }
 * { box-sizing: border-box; }
@@ -18,7 +18,7 @@ html {
   font: 15px/1.5 ui-monospace, Menlo, Consolas, monospace;
 }
 body { margin: 0; padding: 12px 14px; }
-::selection { background: var(--tint); color: var(--text); }
+::selection { background: var(--tint); color: var(--bg); }
 
 header { display: flex; justify-content: space-between; align-items: baseline; gap: 1ch; padding: 0 4px; }
 h1 { margin: 0; color: var(--accent); font: inherit; font-weight: bold; }
@@ -41,8 +41,7 @@ h1 { margin: 0; color: var(--accent); font: inherit; font-weight: bold; }
 .n:empty { padding: 0; }
 .close { color: var(--dim); visibility: hidden; }
 .tile:hover .close, .tile:focus-within .close { visibility: visible; }
-/* Red text is hard to read on this background (2.7:1), so delete shows as cream on a red chip (5:1). */
-.close:hover, .close.confirm { background: var(--danger); color: var(--text); }
+.close:hover, .close.confirm { color: var(--danger); }
 #tiles.only .close { display: none; }
 .collapsed { padding: 6px; }
 .collapsed .body { display: none; }
@@ -80,8 +79,7 @@ button:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
 .task:hover .box { color: var(--accent); }
 .text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .del { flex: none; width: 40px; color: var(--dim); text-align: center; }
-.del { padding: 9px 11px; background-clip: content-box; }
-.del:hover { background-color: var(--danger); color: var(--text); }
+.del:hover { color: var(--danger); }
 .done .box { color: var(--ok); }
 .deleted .box { color: var(--dim); }
 .done .text { color: var(--dim); text-decoration: line-through; }
