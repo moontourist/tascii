@@ -1,0 +1,225 @@
+const input = document.getElementById('new');
+const list = document.getElementById('list');
+const empty = document.getElementById('empty');
+const historyBox = document.getElementById('history');
+const doneList = document.getElementById('done');
+const count = document.getElementById('count');
+const row = document.getElementById('row').content.firstElementChild;
+const today = document.getElementById('today');
+const progress = document.getElementById('progress');
+const fill = document.getElementById('fill');
+const rest = document.getElementById('rest');
+const tally = document.getElementById('tally');
+const calm = matchMedia('(prefers-reduced-motion: reduce)');
+let tasks = [];
+let fresh = null; // id of the task just added, so it can slide in
+
+const dayFmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+const shortFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
+const dayKey = (d) => (isNaN(d) ? '' : d.toLocaleDateString('en-CA')); // "2026-11-12"
+function showDate() {
+  const d = new Date();
+  const changed = today.dateTime && today.dateTime !== dayKey(d);
+  today.textContent = dayFmt.format(d).toLowerCase(); // "thu 12 nov"
+  today.dateTime = dayKey(d);
+  if (changed) render(); // new day: today's progress starts over
+}
+showDate();
+setInterval(showDate, 60_000); // a minute check survives the computer sleeping past midnight
+
+const save = () => chrome.storage.local.set({ tasks });
+
+// Stored data could come from an older version, a bug, or a hand edit, so check its shape.
+const clean = (v) => (Array.isArray(v) ? v : [])
+  .filter((t) => typeof t?.id === 'string' && typeof t.text === 'string')
+  .map((t) => ({ ...t, done: t.done === true }));
+
+function rowFor(t) {
+  const li = row.cloneNode(true);
+  li.dataset.id = t.id;
+  li.classList.toggle('done', t.done);
+  li.classList.toggle('fresh', t.id === fresh);
+  li.querySelector('.box').textContent = t.done ? '[x]' : '[ ]';
+  li.querySelector('.task').setAttribute('aria-pressed', t.done);
+  li.querySelector('.label').textContent = t.text; // textContent, never innerHTML: user text stays text
+  const when = new Date(t.doneAt);
+  if (t.doneAt && !isNaN(when)) li.querySelector('.when').textContent = shortFmt.format(when).toLowerCase();
+  return li;
+}
+
+function render() {
+  // Rows are rebuilt below, so remember which one had keyboard focus.
+  const a = document.activeElement;
+  const li = a?.closest('li');
+  const was = li && {
+    ul: li.parentElement,
+    id: li.dataset.id,
+    near: (li.nextElementSibling ?? li.previousElementSibling)?.dataset.id,
+    part: a.matches('.del') ? '.del' : '.task',
+  };
+
+  const open = tasks.filter((t) => !t.done);
+  const done = tasks.filter((t) => t.done).sort((x, y) => (y.doneAt ?? '').localeCompare(x.doneAt ?? ''));
+  list.replaceChildren(...open.map(rowFor));
+  doneList.replaceChildren(...done.map(rowFor));
+  empty.hidden = open.length > 0;
+  historyBox.hidden = done.length === 0;
+  count.textContent = done.length;
+  const doneToday = done.filter((t) => dayKey(new Date(t.doneAt)) === today.dateTime).length;
+  drawBar(doneToday, open.length + doneToday);
+
+  // Same row if it's still in the same list, else its neighbour, else the input.
+  if (!was) return;
+  const find = (id) => [...was.ul.children].find((x) => x.dataset.id === id)?.querySelector(was.part);
+  (find(was.id) ?? find(was.near) ?? input).focus();
+}
+
+// ASCII bar of tasks finished today. Grows one # at a time when it goes up.
+const BAR = 20;
+let shown = -1; // bar chars on screen; -1 until the first draw, which is instant
+let growing;
+function drawBar(n, total) {
+  progress.hidden = total === 0;
+  tally.textContent = `${n}/${total} today`;
+  const target = total ? Math.round((n / total) * BAR) : 0;
+  const paint = () => {
+    fill.textContent = '#'.repeat(shown);
+    rest.textContent = '-'.repeat(BAR - shown);
+  };
+  clearInterval(growing);
+  if (shown < 0 || target <= shown || calm.matches) {
+    shown = target;
+    paint();
+    return;
+  }
+  growing = setInterval(() => {
+    shown++;
+    paint();
+    if (shown >= target) clearInterval(growing);
+  }, 25);
+}
+
+const loaded = chrome.storage.local.get({ tasks: [] }).then((r) => {
+  tasks = clean(r.tasks);
+  render();
+});
+
+// A panel open in another window changed the list: show its version.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local' || !changes.tasks) return;
+  const next = clean(changes.tasks.newValue);
+  if (JSON.stringify(next) === JSON.stringify(tasks)) return; // our own save
+  tasks = next;
+  render();
+});
+
+input.addEventListener('keydown', async (e) => {
+  if (e.key !== 'Enter' || e.isComposing) return;
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  await loaded; // don't save over the stored list before it has been read
+  fresh = crypto.randomUUID();
+  tasks.push({ id: fresh, text, done: false, added: new Date().toISOString() });
+  save();
+  render();
+  fresh = null;
+});
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const SPIN = ['[-]', '[\\]', '[|]', '[/]', '[x]'];
+const UNSPIN = ['[/]', '[|]', '[\\]', '[-]', '[ ]'];
+async function spin(box, frames) {
+  for (const f of frames) {
+    box.textContent = f;
+    await wait(45);
+  }
+}
+
+// A little burst of ASCII sparks flying out of the box.
+const SPARKS = ['*', '+', '.', "'", '*', '+', '.', '`'];
+const SPARK_COLORS = ['var(--yellow)', 'var(--green)', 'var(--aqua)', 'var(--orange)'];
+function burst(box) {
+  const r = box.getBoundingClientRect();
+  SPARKS.forEach((ch, i) => {
+    const s = document.createElement('span');
+    s.className = 'spark';
+    s.textContent = ch;
+    s.style.left = `${r.left + r.width / 2}px`;
+    s.style.top = `${r.top + r.height / 2}px`;
+    s.style.color = SPARK_COLORS[i % SPARK_COLORS.length];
+    document.body.append(s);
+    const angle = (i / SPARKS.length) * 2 * Math.PI + Math.random() * 0.6;
+    const dist = 22 + Math.random() * 18;
+    const out = `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px))`;
+    s.animate([
+      { transform: 'translate(-50%, -50%) scale(1.4)', opacity: 1 },
+      { transform: `${out} scale(1)`, opacity: 1, offset: 0.6 },
+      { transform: `${out} scale(0.6)`, opacity: 0 },
+    ], { duration: 450, easing: 'cubic-bezier(.2, .8, .3, 1)', fill: 'forwards' });
+    setTimeout(() => s.remove(), 500); // a timer, not the animation's finish event, which can stall in a hidden panel
+  });
+}
+
+async function onRowClick(e) {
+  const btn = e.target.closest('button');
+  const li = btn?.closest('li');
+  if (!li || li.classList.contains('leaving')) return;
+  const t = tasks.find((t) => t.id === li.dataset.id);
+  if (!t) return;
+  const kind = btn.matches('.del') ? 'gone' : t.done ? 'restored' : 'finished';
+  if (kind === 'gone') {
+    tasks = tasks.filter((x) => x !== t);
+  } else if (kind === 'restored') {
+    t.done = false;
+    delete t.doneAt;
+  } else {
+    t.done = true;
+    t.doneAt = new Date().toISOString();
+  }
+  save(); // saved before the animation, so closing the panel mid-way loses nothing
+  if (!calm.matches) {
+    li.classList.add('leaving', kind);
+    const box = li.querySelector('.box');
+    if (kind === 'finished') {
+      await spin(box, SPIN);
+      burst(box);
+      await wait(430); // matches the strike and fade timings in panel.css
+    } else if (kind === 'restored') {
+      await spin(box, UNSPIN);
+      await wait(180);
+    } else {
+      await wait(200);
+    }
+  }
+  render();
+}
+list.addEventListener('click', onRowClick);
+doneList.addEventListener('click', onRowClick);
+
+// Keyboard: j/k (or arrows) move between rows, h/l between a task and its x,
+// space crosses off (or restores in history), i or / goes to the input, Esc leaves it.
+const stops = () => [...document.querySelectorAll('.task, summary')].filter((el) => el.checkVisibility());
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
+  const a = document.activeElement;
+  if (a === input) {
+    if (e.key !== 'Escape' && e.key !== 'ArrowDown') return;
+    stops()[0]?.focus();
+    e.preventDefault();
+    return;
+  }
+  const li = a.closest('li');
+  const all = stops();
+  const at = all.indexOf(li ? li.querySelector('.task') : a);
+  switch (e.key) {
+    case 'j': case 'ArrowDown': all[at + 1]?.focus(); break;
+    case 'k': case 'ArrowUp': (all[at - 1] ?? input).focus(); break;
+    case 'h': case 'ArrowLeft': li?.querySelector('.task').focus(); break;
+    case 'l': case 'ArrowRight': li?.querySelector('.del').focus(); break;
+    case ' ': if (!li) return; li.querySelector('.task').click(); break; // summary keeps its own space
+    case 'i': case '/': input.focus(); break;
+    default: return;
+  }
+  e.preventDefault();
+});

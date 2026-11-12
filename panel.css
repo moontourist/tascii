@@ -1,0 +1,106 @@
+:root {
+  --bg: #282828;
+  --bg1: #3c3836;
+  --fg: #ebdbb2;
+  --muted: #928374;
+  --yellow: #fabd2f;
+  --green: #b8bb26;
+  --red: #fb4934;
+  --aqua: #8ec07c;
+  --orange: #fe8019;
+}
+[hidden] { display: none !important; }
+* { box-sizing: border-box; }
+html {
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.5 ui-monospace, Menlo, Consolas, monospace;
+}
+body { margin: 0; padding: 12px 14px; }
+::selection { background: var(--bg1); }
+
+header { display: flex; justify-content: space-between; align-items: baseline; gap: 1ch; padding: 0 4px; }
+h1 { margin: 0; color: var(--yellow); font: inherit; font-weight: bold; }
+#today { color: var(--muted); }
+
+/* Fixed-length rule: add characters if the panel ever gets wider than ~120 columns. */
+.rule { overflow: hidden; white-space: nowrap; color: var(--bg1); user-select: none; }
+.rule::before { content: "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"; }
+
+.prompt { display: flex; gap: 1ch; align-items: center; min-height: 40px; padding: 0 4px; color: var(--yellow); }
+input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  caret-color: var(--yellow);
+}
+input::placeholder { color: var(--muted); }
+
+ul { margin: 0; padding: 0; list-style: none; }
+li { display: flex; border-radius: 3px; }
+li:hover { background: var(--bg1); }
+button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+button:focus-visible { outline: 1px solid var(--yellow); outline-offset: -1px; }
+.task { flex: 1; min-width: 0; display: flex; gap: 1ch; align-items: baseline; min-height: 40px; padding: 8px 4px; }
+.box { flex: none; color: var(--muted); }
+.task:hover .box { color: var(--yellow); }
+.text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.del { flex: none; width: 40px; color: var(--muted); text-align: center; }
+.del:hover { color: var(--red); }
+.done .box { color: var(--green); }
+.done .text { color: var(--muted); text-decoration: line-through; }
+#empty { margin: 12px 4px; color: var(--muted); }
+
+/* Today's progress: [#######-------------] 2/5 */
+#progress { display: flex; justify-content: space-between; gap: 1ch; padding: 0 4px; color: var(--muted); white-space: pre; }
+#fill { color: var(--green); }
+#rest { color: var(--bg1); }
+
+footer { margin-top: 16px; padding: 0 4px; color: var(--muted); font-size: 12px; opacity: 0.7; }
+
+/* Finishing a task: the box spins [-] [\] [|] [/] [x] (panel.js), sparks fly,
+   a green line strikes through, the row flashes, then slides away. */
+.label {
+  background: linear-gradient(var(--green), var(--green)) no-repeat 0 55% / 0 2px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background-size 0.25s 0.15s ease-out;
+}
+.finished .label { background-size: 100% 2px; color: var(--muted); transition: background-size 0.25s 0.15s ease-out, color 0.3s 0.2s; }
+.finished .box { color: var(--yellow); }
+.finished { animation: flash 0.5s ease-out, leave 0.2s 0.45s ease-in forwards; }
+.restored .box { color: var(--yellow); }
+.restored { animation: leave 0.2s 0.2s ease-in forwards; }
+.gone .label { color: var(--red); text-decoration: line-through; }
+.gone { animation: gone 0.2s ease-in forwards; }
+.fresh { animation: enter 0.25s ease-out; }
+@keyframes flash { from { background: color-mix(in srgb, var(--green) 18%, transparent); } }
+@keyframes leave { to { opacity: 0; transform: translateX(8px); } }
+@keyframes gone { to { opacity: 0; transform: translateX(-8px); } }
+@keyframes enter { from { opacity: 0; transform: translateX(-6px); } }
+.spark { position: fixed; z-index: 1; pointer-events: none; font-size: 17px; font-weight: bold; }
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation: none !important; transition: none !important; }
+}
+
+.when { flex: none; color: var(--muted); }
+#history { margin-top: 8px; }
+summary { padding: 8px 4px; border-radius: 3px; color: var(--muted); list-style: none; cursor: pointer; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "+ "; }
+#history[open] summary::before { content: "- "; }
+summary:hover { background: var(--bg1); color: var(--fg); }
+summary:focus-visible { outline: 1px solid var(--yellow); outline-offset: -1px; }
