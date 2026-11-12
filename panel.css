@@ -1,0 +1,53 @@
+:root {
+  --bg: #282828;
+  --bg1: #3c3836;
+  --fg: #ebdbb2;
+  --muted: #928374;
+  --yellow: #fabd2f;
+  --green: #b8bb26;
+  --red: #fb4934;
+}
+* { box-sizing: border-box; }
+html {
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.6 ui-monospace, Menlo, Consolas, monospace;
+}
+body { margin: 0; padding: 12px; }
+::selection { background: var(--bg1); }
+.logo { margin: 0 0 12px; color: var(--yellow); font: inherit; line-height: 1; }
+/* Fixed-length rule: add characters if the panel ever gets wider than ~120 columns. */
+.rule { overflow: hidden; white-space: nowrap; color: var(--bg1); user-select: none; }
+.rule::before { content: "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"; }
+.prompt { display: flex; gap: 1ch; color: var(--yellow); }
+input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  caret-color: var(--yellow);
+}
+input::placeholder { color: var(--muted); }
+ul { margin: 0; padding: 0; list-style: none; }
+li { display: flex; gap: 1ch; align-items: baseline; }
+button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+button:focus-visible { outline: 1px solid var(--yellow); }
+.box { color: var(--muted); }
+.box:hover { color: var(--yellow); }
+.text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.del { color: var(--red); visibility: hidden; }
+li:hover .del, .del:focus-visible { visibility: visible; }
+.done .box { color: var(--green); }
+.done .text { color: var(--muted); text-decoration: line-through; }
+#empty { margin: 0; color: var(--muted); }
