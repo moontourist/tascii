@@ -1,5 +1,6 @@
 const input = document.getElementById('new');
 const list = document.getElementById('list');
+const empty = document.getElementById('empty');
 const row = document.getElementById('row').content.firstElementChild;
 let tasks = [];
 
@@ -16,10 +17,20 @@ function render() {
     li.querySelector('.text').textContent = t.text; // textContent, never innerHTML: user text stays text
     return li;
   }));
+  empty.hidden = tasks.length > 0;
 }
 
 const loaded = chrome.storage.local.get({ tasks: [] }).then((r) => {
   tasks = r.tasks;
+  render();
+});
+
+// A panel open in another window changed the list: show its version.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local' || !changes.tasks) return;
+  const next = changes.tasks.newValue ?? [];
+  if (JSON.stringify(next) === JSON.stringify(tasks)) return; // our own save
+  tasks = next;
   render();
 });
 
@@ -37,13 +48,18 @@ input.addEventListener('keydown', async (e) => {
 list.addEventListener('click', (e) => {
   const btn = e.target.closest('button');
   if (!btn) return;
-  const id = btn.closest('li').dataset.id;
+  const li = btn.closest('li');
+  const id = li.dataset.id;
+  let focusId = id;
   if (btn.classList.contains('box')) {
     const t = tasks.find((t) => t.id === id);
     t.done = !t.done;
   } else {
     tasks = tasks.filter((t) => t.id !== id);
+    focusId = (li.nextElementSibling ?? li.previousElementSibling)?.dataset.id;
   }
   save();
   render();
+  // render() rebuilt the rows, so put keyboard focus back where it was.
+  (list.querySelector(`[data-id="${focusId}"] .box`) ?? input).focus();
 });
