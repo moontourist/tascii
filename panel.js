@@ -12,6 +12,7 @@ const rest = document.getElementById('rest');
 const tally = document.getElementById('tally');
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 let tasks = [];
+let fresh = null; // id of the task just added, so it can slide in
 
 const dayFmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 const shortFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
@@ -37,6 +38,7 @@ function rowFor(t) {
   const li = row.cloneNode(true);
   li.dataset.id = t.id;
   li.classList.toggle('done', t.done);
+  li.classList.toggle('fresh', t.id === fresh);
   li.querySelector('.box').textContent = t.done ? '[x]' : '[ ]';
   li.querySelector('.task').setAttribute('aria-pressed', t.done);
   li.querySelector('.label').textContent = t.text; // textContent, never innerHTML: user text stays text
@@ -117,10 +119,47 @@ input.addEventListener('keydown', async (e) => {
   if (!text) return;
   input.value = '';
   await loaded; // don't save over the stored list before it has been read
-  tasks.push({ id: crypto.randomUUID(), text, done: false, added: new Date().toISOString() });
+  fresh = crypto.randomUUID();
+  tasks.push({ id: fresh, text, done: false, added: new Date().toISOString() });
   save();
   render();
+  fresh = null;
 });
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const SPIN = ['[-]', '[\\]', '[|]', '[/]', '[x]'];
+const UNSPIN = ['[/]', '[|]', '[\\]', '[-]', '[ ]'];
+async function spin(box, frames) {
+  for (const f of frames) {
+    box.textContent = f;
+    await wait(45);
+  }
+}
+
+// A little burst of ASCII sparks flying out of the box.
+const SPARKS = ['*', '+', '.', "'", '*', '+', '.', '`'];
+const SPARK_COLORS = ['var(--yellow)', 'var(--green)', 'var(--aqua)', 'var(--orange)'];
+function burst(box) {
+  const r = box.getBoundingClientRect();
+  SPARKS.forEach((ch, i) => {
+    const s = document.createElement('span');
+    s.className = 'spark';
+    s.textContent = ch;
+    s.style.left = `${r.left + r.width / 2}px`;
+    s.style.top = `${r.top + r.height / 2}px`;
+    s.style.color = SPARK_COLORS[i % SPARK_COLORS.length];
+    document.body.append(s);
+    const angle = (i / SPARKS.length) * 2 * Math.PI + Math.random() * 0.6;
+    const dist = 22 + Math.random() * 18;
+    const out = `translate(calc(-50% + ${Math.cos(angle) * dist}px), calc(-50% + ${Math.sin(angle) * dist}px))`;
+    s.animate([
+      { transform: 'translate(-50%, -50%) scale(1.4)', opacity: 1 },
+      { transform: `${out} scale(1)`, opacity: 1, offset: 0.6 },
+      { transform: `${out} scale(0.6)`, opacity: 0 },
+    ], { duration: 450, easing: 'cubic-bezier(.2, .8, .3, 1)', fill: 'forwards' });
+    setTimeout(() => s.remove(), 500); // a timer, not the animation's finish event, which can stall in a hidden panel
+  });
+}
 
 async function onRowClick(e) {
   const btn = e.target.closest('button');
@@ -128,21 +167,31 @@ async function onRowClick(e) {
   if (!li || li.classList.contains('leaving')) return;
   const t = tasks.find((t) => t.id === li.dataset.id);
   if (!t) return;
-  if (btn.matches('.del')) {
+  const kind = btn.matches('.del') ? 'gone' : t.done ? 'restored' : 'finished';
+  if (kind === 'gone') {
     tasks = tasks.filter((x) => x !== t);
-  } else if (t.done) { // clicked in history: put it back
+  } else if (kind === 'restored') {
     t.done = false;
     delete t.doneAt;
   } else {
     t.done = true;
     t.doneAt = new Date().toISOString();
-    save(); // saved before the animation, so closing the panel mid-way loses nothing
-    if (!calm.matches) {
-      li.classList.add('leaving');
-      await new Promise((r) => setTimeout(r, 500)); // matches the 0.3s + 0.2s in panel.css
+  }
+  save(); // saved before the animation, so closing the panel mid-way loses nothing
+  if (!calm.matches) {
+    li.classList.add('leaving', kind);
+    const box = li.querySelector('.box');
+    if (kind === 'finished') {
+      await spin(box, SPIN);
+      burst(box);
+      await wait(430); // matches the strike and fade timings in panel.css
+    } else if (kind === 'restored') {
+      await spin(box, UNSPIN);
+      await wait(180);
+    } else {
+      await wait(200);
     }
   }
-  save();
   render();
 }
 list.addEventListener('click', onRowClick);

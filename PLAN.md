@@ -80,6 +80,17 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 - Task length limit (500 characters).
 - `node tests/run.mjs` checks permissions, the policy, version/tag match, banned code patterns (HTML injection, `eval`, network calls), and runs the panel in headless Chrome with XSS payloads and corrupted data.
 
+## Round 3: ASCII and feel
+
+### v1.5.0: ASCII touches
+- `[#####---------------] 1/4 today` progress bar under the header that grows one `#` at a time.
+- An ASCII cat when the list is empty, and a muted line of key hints at the bottom.
+
+### v1.6.0: satisfying clicks
+- Finishing: the box spins `[-] [\] [|] [/] [x]`, ASCII sparks (`* + . '`) burst out in Gruvbox colors, a green line strikes through, the row flashes, then slides away.
+- Restoring spins the box back to `[ ]`. Deleting turns the row red and slides it left. New tasks slide in.
+- Everything is saved before the animation starts, and reduced motion turns it all off.
+
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.
 2. Click "Load unpacked" and pick this folder.

@@ -73,19 +73,29 @@ button:focus-visible { outline: 1px solid var(--yellow); outline-offset: -1px; }
 
 footer { margin-top: 16px; padding: 0 4px; color: var(--muted); font-size: 12px; opacity: 0.7; }
 
-/* Cross-out: a line grows left to right under the label, then the row fades out. */
+/* Finishing a task: the box spins [-] [\] [|] [/] [x] (panel.js), sparks fly,
+   a green line strikes through, the row flashes, then slides away. */
 .label {
-  background: linear-gradient(var(--fg), var(--fg)) no-repeat 0 55% / 0 1px;
+  background: linear-gradient(var(--green), var(--green)) no-repeat 0 55% / 0 2px;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
-  transition: background-size 0.3s ease-out;
+  transition: background-size 0.25s 0.15s ease-out;
 }
-.leaving .label { background-size: 100% 1px; }
-.leaving { animation: leave 0.2s 0.3s ease-in forwards; }
+.finished .label { background-size: 100% 2px; color: var(--muted); transition: background-size 0.25s 0.15s ease-out, color 0.3s 0.2s; }
+.finished .box { color: var(--yellow); }
+.finished { animation: flash 0.5s ease-out, leave 0.2s 0.45s ease-in forwards; }
+.restored .box { color: var(--yellow); }
+.restored { animation: leave 0.2s 0.2s ease-in forwards; }
+.gone .label { color: var(--red); text-decoration: line-through; }
+.gone { animation: gone 0.2s ease-in forwards; }
+.fresh { animation: enter 0.25s ease-out; }
+@keyframes flash { from { background: color-mix(in srgb, var(--green) 18%, transparent); } }
 @keyframes leave { to { opacity: 0; transform: translateX(8px); } }
+@keyframes gone { to { opacity: 0; transform: translateX(-8px); } }
+@keyframes enter { from { opacity: 0; transform: translateX(-6px); } }
+.spark { position: fixed; z-index: 1; pointer-events: none; font-size: 17px; font-weight: bold; }
 @media (prefers-reduced-motion: reduce) {
-  .label { transition: none; }
-  .leaving { animation: none; }
+  *, ::before, ::after { animation: none !important; transition: none !important; }
 }
 
 .when { flex: none; color: var(--muted); }

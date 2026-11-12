@@ -1,7 +1,10 @@
-// Runs inside the panel page (see run.mjs). Uses panel.js's globals: input, list, doneList, count, historyBox, empty.
+// Runs inside the panel page (see run.mjs). Uses panel.js's globals: input, list, doneList, count, historyBox, empty, wait.
 const results = [];
 const check = (name, ok) => results.push(`${ok ? 'ok  ' : 'FAIL'} ${name}`);
-const wait = (ms = 20) => new Promise((r) => setTimeout(r, ms));
+// Animation lengths in panel.js, plus a margin.
+const FINISH = 750; // spin 5 x 45ms + 430ms
+const RESTORE = 450; // spin 5 x 45ms + 180ms
+const GONE = 250; // 200ms
 const rows = (ul = list) => [...ul.children];
 const texts = (ul = list) => rows(ul).map((li) => li.querySelector('.label').textContent);
 const task = (i, ul = list) => rows(ul)[i]?.querySelector('.task');
@@ -17,11 +20,11 @@ const key = (k, extra = {}) => {
 
 async function main() {
   type('typed before load'); // races the storage read on purpose
-  await wait();
+  await wait(20);
   check('loads saved tasks', texts()[0] === 'old task');
   check('adding before load keeps saved tasks', __store.tasks.length === 2);
   type('   ');
-  await wait();
+  await wait(20);
   check('ignores blank input', __store.tasks.length === 2);
 
   // Security: task text must never turn into HTML or run code.
@@ -38,24 +41,30 @@ async function main() {
   check('security: no injected code ran', !window.__pwned);
   check('security: input has a length limit', input.maxLength > 0 && input.maxLength <= 1000);
 
-  for (let i = 0; i < payloads.length; i++) task(2, list).nextElementSibling.click(); // x on row 3, four times
-  await wait();
-  check('x deletes a task', __store.tasks.length === 2);
+  rows().slice(2).forEach((li) => li.querySelector('.del').click());
+  check('x deletes right away', __store.tasks.length === 2);
+  check('deleted rows animate out', rows().slice(2).every((li) => li.classList.contains('gone')));
+  await wait(GONE);
+  check('deleted rows are removed', rows().length === 2);
 
   // Done: animate, then move to history.
   task(0).click();
-  await wait();
+  await wait(20);
   check('done is saved right away', __store.tasks.find((t) => t.id === 'a').done === true);
-  check('done row animates', rows()[0].classList.contains('leaving'));
+  check('done row animates', rows()[0].classList.contains('finished'));
+  check('box spins', rows()[0].querySelector('.box').textContent !== '[ ]');
   task(0).click(); // a second click mid-animation must not undo it
-  await wait(600);
+  await wait(300);
+  check('sparks fly', document.querySelectorAll('.spark').length > 0);
+  await wait(FINISH - 300);
+  check('sparks clean up after themselves', document.querySelectorAll('.spark').length === 0);
   check('done row moves to history', texts().join() === 'typed before load' && texts(doneList).join() === 'old task');
   check('history count shows', count.textContent === '1' && !historyBox.hidden);
   check('history shows the finish date', rows(doneList)[0].querySelector('.when').textContent !== '');
   await wait(300); // the bar grows one # at a time
   check('progress bar counts today', tally.textContent === '1/2 today' && fill.textContent === '#'.repeat(10) && rest.textContent === '-'.repeat(10));
   task(0, doneList).click();
-  await wait();
+  await wait(RESTORE);
   check('clicking a history task puts it back', texts().includes('old task') && historyBox.hidden);
   check('restored task loses its finish date', !('doneAt' in __store.tasks.find((t) => t.id === 'a')));
 
@@ -79,7 +88,7 @@ async function main() {
   check('h moves back to the task', document.activeElement === task(0));
   check('cmd/ctrl shortcuts are left alone', !key('l', { metaKey: true }).defaultPrevented);
   key(' ');
-  await wait(600);
+  await wait(FINISH);
   check('space crosses off', texts(doneList).includes('old task'));
   check('focus moves to the next task after crossing off', document.activeElement === task(0));
   key('j');
@@ -94,21 +103,21 @@ async function main() {
   check('syncs changes from another window', texts().join() === 'from other window' && historyBox.hidden);
   task(0).nextElementSibling.focus();
   task(0).nextElementSibling.click();
-  await wait();
+  await wait(GONE);
   check('empty list shows the cat', !empty.hidden && empty.querySelector('pre').textContent.includes('o.o'));
   check('focus returns to input when the list empties', document.activeElement === input);
 }
 
 async function corrupt() {
-  await wait();
+  await wait(20);
   check('security: bad stored data is skipped', texts().join() === 'quote id,valid' && texts(doneList).join() === 'bad date');
   check('security: invalid finish date is left blank', rows(doneList)[0].querySelector('.when').textContent === '');
   task(0).focus();
   task(0).nextElementSibling.click(); // delete the row whose id contains quotes
-  await wait();
+  await wait(GONE);
   check('security: odd ids still work', texts().join() === 'valid');
   __fire({ not: 'a list' });
-  await wait();
+  await wait(20);
   check('security: non-list data from another window is ignored safely', rows().length === 0);
 }
 
