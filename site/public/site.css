@@ -109,7 +109,7 @@ p { margin: 0; }
 
 /* The spinning [x] (spin.js draws it). Two layers on the same grid: the brackets, and the x in green. */
 .logo3d { grid-area: logo3d; display: grid; place-items: center; padding-inline: 10px; container-type: inline-size; }
-.spin { position: relative; margin: 0; font: inherit; font-weight: 800; line-height: 1; font-size: min(11px, 100cqi / 38.4); color: var(--text); }
+.spin { position: relative; margin: 0; font: inherit; font-weight: 800; line-height: 1; font-size: min(8px, 100cqi / 57.6); color: var(--text); }
 .spin span { display: block; }
 .spin span + span { position: absolute; inset: 0; color: var(--ok); }
 

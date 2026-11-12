@@ -17,9 +17,9 @@
       '#####.............#####',
     ];
     const isX = (c) => c >= 5 && c <= 17; // columns of the x (coloured green)
-    const W = 64, H = 26;           // character grid
+    const W = 96, H = 34;           // character grid
     const DEPTH = 3;                // how thick the solid is
-    const STEP = 0.25;              // how finely the surface is sampled
+    const STEP = 0.2;               // how finely the surface is sampled
     const RAMP = '.,-~:;=!*#$@';    // dark to bright
     const ASPECT = 0.6;             // a character is 0.6 as wide as it is tall (at line-height 1)
 
