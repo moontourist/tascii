@@ -116,6 +116,12 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 ### v1.9.0: x deletes
 - Pressing `x` on a selected task deletes it, with the same slide-out as clicking its `x`.
 
+### v1.10.0: deletion history, undo, Rex colors
+- `x` (key or button) sends a task to its tile's history as `[-]`, next to finished `[x]` tasks. Click it there (or space) to restore it, or `x` again to remove it for good.
+- `u` undoes the newest deletion: a task sent to history, one removed for good, or a whole tile with its tasks. Undo covers deletions since the panel opened.
+- Deleted tasks don't count toward today's progress.
+- Colors now come from the Rex terminal theme gruvbox-starship: `#282828` background, `#fbf1c7` text, `#d79921` yellow, `#98971a` green, `#83a598` blue, `#665c54` lines, `#cc241d` red. Delete shows as cream on a red chip, since red text is hard to read on this background. All text passes WCAG AA.
+
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.
 2. Click "Load unpacked" and pick this folder.

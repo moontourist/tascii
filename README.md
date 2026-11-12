@@ -18,8 +18,8 @@ a minimalist ASCII to-do list for Chrome's side panel.
 - Tasks live in **tiles**, boxed lists you can stack (today, work, groceries...). `[ + tile ]` adds one.
 - Click a tile's name to rename it, `-`/`+` to collapse it, and drag its top bar to move it. Its `x` deletes it (it asks first if the tile has tasks).
 - Type a task in a tile and press Enter.
-- Click a task to cross it off. It moves to **history**, where clicking it brings it back.
-- Click `x` to delete a task for good.
+- Click a task to cross it off. It moves to its tile's **history** as `[x]`; clicking it there brings it back.
+- `x` deletes a task into history as `[-]`, so it can come back too. `x` in history removes it for good. `u` undoes the last deletion.
 
 ## Keys
 tascii opens on your first task, ready for these. If keys do nothing, click the panel first: the hint line at the bottom says so when the web page has your keyboard.
@@ -30,7 +30,8 @@ tascii opens on your first task, ready for these. If keys do nothing, click the 
 | `j` / `k` (or `↓` / `↑`) | move down / up through tiles and tasks |
 | `h` / `l` (or `←` / `→`) | move between a task and its `x` |
 | `space` | cross off (or restore, in history) |
-| `x` | delete the selected task |
+| `x` | delete the selected task (to history; in history, for good) |
+| `u` | undo the last deletion (task or tile) |
 | `i` or `/` | back to the tile's input (opens it if collapsed) |
 | `J` / `K` (or shift `↓` / `↑`) | move the tile down / up |
 | `r` | rename the tile |

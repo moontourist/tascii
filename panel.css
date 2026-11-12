@@ -1,15 +1,14 @@
-/* Palette: Gruvbox-Dark by glenntatum (color-hex.com/color-palette/1026676).
-   Only these five colors, plus see-through mixes of them.
-   Aqua and yellow are readable as text on the background; blue and red are not (under 3:1),
-   so they're kept to lines and accents. */
+/* Colors: the Rex terminal theme gruvbox-starship (~/.config/rex/gruvbox-starship). */
 :root {
-  --bg: #3c3836;
-  --text: #8ec07c;   /* aqua, 5.5:1 */
-  --accent: #d79921; /* yellow, 4.7:1: titles, prompt, focus, progress */
-  --line: #458588;   /* blue: borders and decoration only */
+  --bg: #282828;     /* background */
+  --text: #fbf1c7;   /* foreground, 13:1 */
+  --accent: #d79921; /* yellow, 5.9:1: titles, prompt, focus */
+  --ok: #98971a;     /* green, 4.8:1: done, progress, strike line */
+  --info: #83a598;   /* bright blue, 5.5:1: sparks */
+  --line: #665c54;   /* selection background: borders and decoration */
   --danger: #cc241d; /* red: delete only */
-  --dim: color-mix(in srgb, var(--text) 90%, var(--bg)); /* 4.8:1: dates, counts, hints, finished tasks */
-  --tint: color-mix(in srgb, var(--line) 30%, transparent); /* text selection only: a hover background would drop text below 4.5:1 */
+  --dim: color-mix(in srgb, var(--text) 60%, var(--bg)); /* 5.7:1: dates, counts, hints, history */
+  --tint: #665c54;   /* text selection */
 }
 [hidden] { display: none !important; }
 * { box-sizing: border-box; }
@@ -19,7 +18,7 @@ html {
   font: 15px/1.5 ui-monospace, Menlo, Consolas, monospace;
 }
 body { margin: 0; padding: 12px 14px; }
-::selection { background: var(--tint); }
+::selection { background: var(--tint); color: var(--text); }
 
 header { display: flex; justify-content: space-between; align-items: baseline; gap: 1ch; padding: 0 4px; }
 h1 { margin: 0; color: var(--accent); font: inherit; font-weight: bold; }
@@ -42,7 +41,8 @@ h1 { margin: 0; color: var(--accent); font: inherit; font-weight: bold; }
 .n:empty { padding: 0; }
 .close { color: var(--dim); visibility: hidden; }
 .tile:hover .close, .tile:focus-within .close { visibility: visible; }
-.close:hover, .close.confirm { color: var(--danger); }
+/* Red text is hard to read on this background (2.7:1), so delete shows as cream on a red chip (5:1). */
+.close:hover, .close.confirm { background: var(--danger); color: var(--text); }
 #tiles.only .close { display: none; }
 .collapsed { padding: 6px; }
 .collapsed .body { display: none; }
@@ -80,14 +80,16 @@ button:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
 .task:hover .box { color: var(--accent); }
 .text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .del { flex: none; width: 40px; color: var(--dim); text-align: center; }
-.del:hover { color: var(--danger); }
-.done .box { color: var(--text); }
+.del { padding: 9px 11px; background-clip: content-box; }
+.del:hover { background-color: var(--danger); color: var(--text); }
+.done .box { color: var(--ok); }
+.deleted .box { color: var(--dim); }
 .done .text { color: var(--dim); text-decoration: line-through; }
 .empty { margin: 4px 4px 8px; color: var(--dim); }
 
 /* Today's progress: [#######-------------] 2/5 */
 #progress { display: flex; justify-content: space-between; gap: 1ch; padding: 0 4px; color: var(--dim); white-space: pre; }
-#fill { color: var(--accent); }
+#fill { color: var(--ok); }
 #rest { color: var(--line); }
 
 .away h1 { color: var(--dim); }
@@ -98,7 +100,7 @@ footer { margin-top: 16px; padding: 0 4px; color: var(--dim); font-size: 12px; t
 /* Finishing a task: the box spins [-] [\] [|] [/] [x] (panel.js), sparks fly,
    a green line strikes through, the row flashes, then slides away. */
 .label {
-  background: linear-gradient(var(--accent), var(--accent)) no-repeat 0 55% / 0 2px;
+  background: linear-gradient(var(--ok), var(--ok)) no-repeat 0 55% / 0 2px;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   transition: background-size 0.25s 0.15s ease-out;
@@ -108,10 +110,10 @@ footer { margin-top: 16px; padding: 0 4px; color: var(--dim); font-size: 12px; t
 .finished { animation: flash 0.5s ease-out, leave 0.2s 0.45s ease-in forwards; }
 .restored .box { color: var(--accent); }
 .restored { animation: leave 0.2s 0.2s ease-in forwards; }
-.gone .label { color: var(--danger); text-decoration: line-through; }
+.gone .label { color: var(--dim); text-decoration: line-through var(--danger) 2px; }
 .gone { animation: gone 0.2s ease-in forwards; }
 .fresh { animation: enter 0.25s ease-out; }
-@keyframes flash { from { background: color-mix(in srgb, var(--text) 18%, transparent); } }
+@keyframes flash { from { background: color-mix(in srgb, var(--ok) 22%, transparent); } }
 @keyframes leave { to { opacity: 0; transform: translateX(8px); } }
 @keyframes gone { to { opacity: 0; transform: translateX(-8px); } }
 @keyframes enter { from { opacity: 0; transform: translateX(-6px); } }

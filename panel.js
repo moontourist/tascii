@@ -12,6 +12,7 @@ let tasks = [];
 let tiles = []; // in screen order: { id, name, collapsed }
 let fresh = null; // id of the task or tile just added, so it can slide in
 const tileEls = new Map(); // tile id -> its <section>, kept between renders so typing and focus survive
+const undo = []; // deletions since the panel opened, newest last (u takes them back)
 
 const dayFmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 const shortFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
@@ -39,27 +40,33 @@ function clean(rawTasks, rawTiles) {
   const ids = new Set(ts.map((t) => t.id));
   const tk = listOf(rawTasks)
     .filter((t) => typeof t?.id === 'string' && typeof t.text === 'string')
-    .map((t) => ({ ...t, done: t.done === true, tile: ids.has(t.tile) ? t.tile : ts[0].id }));
+    .map((t) => ({ ...t, done: t.done === true, deleted: t.deleted === true, tile: ids.has(t.tile) ? t.tile : ts[0].id }));
   return [tk, ts];
 }
 
 function rowFor(t) {
   const li = row.cloneNode(true);
   li.dataset.id = t.id;
-  li.classList.toggle('done', t.done);
+  li.classList.toggle('done', t.done || t.deleted); // both live in history
+  li.classList.toggle('deleted', t.deleted);
   li.classList.toggle('fresh', t.id === fresh);
-  li.querySelector('.box').textContent = t.done ? '[x]' : '[ ]';
+  li.querySelector('.box').textContent = t.deleted ? '[-]' : t.done ? '[x]' : '[ ]';
   li.querySelector('.task').setAttribute('aria-pressed', t.done);
+  if (t.deleted) li.querySelector('.task').setAttribute('aria-label', `Deleted: ${t.text}. Restore`);
   li.querySelector('.label').textContent = t.text; // textContent, never innerHTML: user text stays text
-  const when = new Date(t.doneAt);
-  if (t.doneAt && !isNaN(when)) li.querySelector('.when').textContent = shortFmt.format(when).toLowerCase();
+  const when = new Date(ended(t));
+  if (ended(t) && !isNaN(when)) li.querySelector('.when').textContent = shortFmt.format(when).toLowerCase();
   return li;
 }
 
+// History holds finished and deleted tasks, newest first.
+const ended = (t) => (t.done ? t.doneAt : t.deletedAt) ?? '';
+const inHistory = (t) => t.done || t.deleted;
+
 function fillTile(el, tile) {
   const mine = tasks.filter((t) => t.tile === tile.id);
-  const open = mine.filter((t) => !t.done);
-  const done = mine.filter((t) => t.done).sort((x, y) => (y.doneAt ?? '').localeCompare(x.doneAt ?? ''));
+  const open = mine.filter((t) => !inHistory(t));
+  const done = mine.filter(inHistory).sort((x, y) => ended(y).localeCompare(ended(x)));
   el.classList.toggle('collapsed', tile.collapsed);
   el.classList.toggle('fresh', tile.id === fresh);
   const fold = el.querySelector('.fold');
@@ -104,7 +111,7 @@ function render() {
   }
   tilesEl.classList.toggle('only', tiles.length === 1);
 
-  const open = tasks.filter((t) => !t.done).length;
+  const open = tasks.filter((t) => !inHistory(t)).length;
   const doneToday = tasks.filter((t) => t.done && dayKey(new Date(t.doneAt)) === today.dateTime).length;
   drawBar(doneToday, open + doneToday);
 
@@ -162,7 +169,7 @@ showFocus();
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'local' || !(changes.tasks || changes.tiles)) return;
   const next = clean(changes.tasks ? changes.tasks.newValue : tasks, changes.tiles ? changes.tiles.newValue : tiles);
-  if (JSON.stringify(next) === JSON.stringify([tasks, tiles])) return; // our own save
+  if (JSON.stringify(next) === JSON.stringify(clean(tasks, tiles))) return; // our own save
   [tasks, tiles] = next;
   render();
 });
@@ -182,7 +189,7 @@ tilesEl.addEventListener('keydown', (e) => {
   if (!text) return;
   e.target.value = '';
   fresh = crypto.randomUUID();
-  tasks.push({ id: fresh, tile: el.dataset.id, text, done: false, added: new Date().toISOString() });
+  tasks.push({ id: fresh, tile: el.dataset.id, text, done: false, deleted: false, added: new Date().toISOString() });
   save();
   render();
   fresh = null;
@@ -238,6 +245,7 @@ async function closeTile(btn, tile) {
     }, 3000);
     return;
   }
+  undo.push({ tile, at: tiles.indexOf(tile), tasks: tasks.filter((t) => t.tile === tile.id) });
   tiles = tiles.filter((t) => t !== tile);
   tasks = tasks.filter((t) => t.tile !== tile.id);
   save();
@@ -326,7 +334,7 @@ async function spin(box, frames) {
 
 // A little burst of ASCII sparks flying out of the box.
 const SPARKS = ['*', '+', '.', "'", '*', '+', '.', '`'];
-const SPARK_COLORS = ['var(--accent)', 'var(--text)', 'var(--line)', 'var(--accent)'];
+const SPARK_COLORS = ['var(--accent)', 'var(--ok)', 'var(--info)', 'var(--text)'];
 function burst(box) {
   const r = box.getBoundingClientRect();
   SPARKS.forEach((ch, i) => {
@@ -354,19 +362,27 @@ async function onRowClick(btn) {
   if (!li || li.classList.contains('leaving')) return;
   const t = tasks.find((t) => t.id === li.dataset.id);
   if (!t) return;
-  const kind = btn.matches('.del') ? 'gone' : t.done ? 'restored' : 'finished';
+  // x on a task sends it to history; x in history removes it for good.
+  const kind = btn.matches('.del') ? (inHistory(t) ? 'gone' : 'deleted') : inHistory(t) ? 'restored' : 'finished';
   if (kind === 'gone') {
+    undo.push({ task: t, at: tasks.indexOf(t) });
     tasks = tasks.filter((x) => x !== t);
+  } else if (kind === 'deleted') {
+    undo.push({ id: t.id });
+    t.deleted = true;
+    t.deletedAt = new Date().toISOString();
   } else if (kind === 'restored') {
     t.done = false;
+    t.deleted = false;
     delete t.doneAt;
+    delete t.deletedAt;
   } else {
     t.done = true;
     t.doneAt = new Date().toISOString();
   }
   save(); // saved before the animation, so closing the panel mid-way loses nothing
   if (!calm.matches) {
-    li.classList.add('leaving', kind);
+    li.classList.add('leaving', kind === 'deleted' ? 'gone' : kind);
     const box = li.querySelector('.box');
     if (kind === 'finished') {
       await spin(box, SPIN);
@@ -382,8 +398,37 @@ async function onRowClick(btn) {
   render();
 }
 
+// u: take back the newest deletion, whether it sent a task to history,
+// removed one from history for good, or deleted a whole tile.
+function undoLast() {
+  const u = undo.pop();
+  if (!u) return;
+  let t;
+  if (u.id) {
+    t = tasks.find((x) => x.id === u.id);
+    if (!t?.deleted) return undoLast(); // already restored by hand, or gone: try the one before
+    t.deleted = false;
+    delete t.deletedAt;
+  } else if (u.task) {
+    t = u.task;
+    if (!tiles.some((x) => x.id === t.tile)) t.tile = tiles[0].id;
+    tasks.splice(Math.min(u.at, tasks.length), 0, t);
+  } else {
+    tiles.splice(Math.min(u.at, tiles.length), 0, u.tile);
+    tasks.push(...u.tasks.filter((x) => !tasks.some((y) => y.id === x.id)));
+  }
+  fresh = t?.id ?? u.tile.id;
+  save();
+  render();
+  fresh = null;
+  if (!t) return tileEls.get(u.tile.id)?.querySelector('.fold').focus();
+  const li = tilesEl.querySelector(`li[data-id="${CSS.escape(t.id)}"]`);
+  if (inHistory(t)) li?.closest('details').setAttribute('open', '');
+  li?.querySelector('.task').focus();
+}
+
 // Keyboard: j/k (or arrows) move through tile headers, tasks and history toggles.
-// h/l move between a task and its x, space crosses off (or restores in history), x deletes,
+// h/l move between a task and its x, space crosses off (or restores in history), x deletes (to history), u undoes a deletion,
 // i or / goes to the tile's input and Esc leaves it, r renames the tile,
 // J/K (or shift+arrows) move the tile, N adds a tile.
 const stops = () => [...document.querySelectorAll('.fold, .task, summary')].filter((el) => el.checkVisibility());
@@ -413,6 +458,7 @@ document.addEventListener('keydown', (e) => {
     case 'l': case 'ArrowRight': li?.querySelector('.del').focus(); break;
     case ' ': if (!li) return; li.querySelector('.task').click(); break; // headers and history keep their own space
     case 'x': if (!li) return; li.querySelector('.del').click(); break;
+    case 'u': undoLast(); break;
     case 'i': case '/': {
       const tile = tileFor(el);
       if (tile?.collapsed) {

@@ -50,11 +50,32 @@ async function main() {
   check('security: task input has a length limit', q('.new').maxLength > 0 && q('.new').maxLength <= 1000);
   check('security: tile name has a length limit', q('.title').maxLength > 0 && q('.title').maxLength <= 100);
 
+  // Deleting: x sends a task to its tile's history, x there removes it for good, u undoes.
   rows().slice(2).forEach((li) => li.querySelector('.del').click());
-  check('x deletes right away', __store.tasks.length === 2);
+  check('x deletes right away', __store.tasks.filter((t) => t.deleted && t.deletedAt).length === 4);
   check('deleted rows animate out', rows().slice(2).every((li) => li.classList.contains('gone')));
   await wait(GONE);
-  check('deleted rows are removed', rows().length === 2);
+  check('deleted tasks go to history as [-]', rows().length === 2 && rows(0, '.done').length === 4
+    && rows(0, '.done').every((li) => li.querySelector('.box').textContent === '[-]'));
+  check('deleted tasks are not counted as done', tally.textContent === '0/2 today');
+  focused().blur?.();
+  key('u');
+  await wait(20);
+  check('u brings back the last deletion', rows().length === 3 && rows(0, '.done').length === 3 && focused() === task(2));
+  key('x');
+  await wait(GONE);
+  check('x on the selected task deletes it again', rows().length === 2 && rows(0, '.done').length === 4);
+  rows(0, '.done').forEach((li) => li.querySelector('.del').click());
+  await wait(GONE);
+  check('x in history removes for good', __store.tasks.length === 2 && q('.history').hidden);
+  key('u');
+  await wait(20);
+  check('u brings back a task removed for good', __store.tasks.length === 3 && rows(0, '.done').length === 1
+    && q('.history').open && focused() === task(0, 0, '.done'));
+  task(0, 0, '.done').nextElementSibling.click();
+  await wait(GONE);
+  check('history empties again', __store.tasks.length === 2 && q('.history').hidden);
+  q('.history').open = false;
 
   // Done: animate, then move to history.
   task(0).click();
@@ -165,6 +186,13 @@ async function main() {
   q('.close', 0).click();
   await wait(GONE);
   check('second click deletes the tile and its tasks', names().join() === 'todo' && !__store.tasks.some((t) => t.text === 'ship it'));
+  key('u');
+  await wait(20);
+  check('u brings back a deleted tile with its tasks', names().length === 2 && texts(0).join() === 'ship it' && focused() === q('.fold', 0));
+  q('.close', 0).click();
+  q('.close', 0).click();
+  await wait(GONE);
+  check('tile deleted again', names().join() === 'todo');
 
   // Another window changes things.
   __fire({ tasks: { newValue: [{ id: 'z', text: 'from other window', done: false, tile: 'main' }] } });
@@ -172,7 +200,7 @@ async function main() {
   task(0).focus();
   key('x');
   await wait(GONE);
-  check('x deletes the selected task', rows().length === 0 && !__store.tasks.some((t) => t.id === 'z'));
+  check('x deletes the selected task', rows().length === 0 && __store.tasks.find((t) => t.id === 'z').deleted);
   check('empty list shows a message', !q('.empty').hidden);
   check('focus returns to the input when a list empties', focused() === q('.new'));
 }
