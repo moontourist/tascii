@@ -56,7 +56,7 @@ p { margin: 0; }
   gap: calc(var(--gap) * 1.6) var(--gap);
   padding: calc(var(--gap) * 1.6) var(--gap) var(--gap);
   min-height: 100dvh;
-  grid-template-areas: "hero" "demo" "keys" "private";
+  grid-template-areas: "hero" "logo3d" "demo" "keys" "private";
 }
 
 /* A window: a box with its title cut into the top border. */
@@ -89,8 +89,8 @@ p { margin: 0; }
   display: block;
   white-space: pre;
   color: var(--accent);
-  /* 58 columns wide: sized to fill the readme window's width, up to 22px. */
-  font-size: min(22px, 100cqi / 35.5);
+  /* 58 columns wide: sized to fit the readme window, up to 12px. */
+  font-size: min(12px, 100cqi / 35.5);
   line-height: 1;
 }
 .sr {
@@ -106,6 +106,12 @@ p { margin: 0; }
 .cta a + a { color: var(--text); }
 .cta a:hover { color: var(--text); background: color-mix(in srgb, var(--text) 10%, var(--bg)); }
 .fine { color: var(--dim); font-size: 0.875rem; }
+
+/* The spinning [x] (spin.js draws it). Two layers on the same grid: the brackets, and the x in green. */
+.logo3d { grid-area: logo3d; display: grid; place-items: center; padding-inline: 10px; container-type: inline-size; }
+.spin { position: relative; margin: 0; font: inherit; font-weight: 800; line-height: 1; font-size: min(11px, 100cqi / 38.4); color: var(--text); }
+.spin span { display: block; }
+.spin span + span { position: absolute; inset: 0; color: var(--ok); }
 
 /* The demo is the real panel in a frame, sized like Chrome's side panel. */
 .demo { grid-area: demo; display: flex; flex-direction: column; padding: 18px 0 0; height: 640px; }
@@ -125,7 +131,7 @@ p { margin: 0; }
 @media (min-width: 720px) {
   .desk {
     grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
-    grid-template-areas: "hero hero" "keys demo" "private demo";
+    grid-template-areas: "hero hero" "logo3d demo" "keys demo" "private demo";
   }
   .demo { height: auto; min-height: 560px; }
 }
@@ -133,9 +139,11 @@ p { margin: 0; }
 @media (min-width: 1080px) {
   :root { --gap: 14px; }
   .desk {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(340px, 400px);
+    grid-template-columns: repeat(10, minmax(0, 1fr)) minmax(340px, 400px);
     grid-template-rows: 1.6fr 1fr;
-    grid-template-areas: "hero hero demo" "keys private demo";
+    grid-template-areas:
+      "hero hero hero hero hero hero logo3d logo3d logo3d logo3d demo"
+      "keys keys keys keys keys private private private private private demo";
   }
   .win { padding: 30px 32px 24px; }
   .hero { padding-left: 48px; }
