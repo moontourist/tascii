@@ -205,7 +205,8 @@ chrome.storage.local.get({ tasks: [], tiles: [] }).then((r) => {
   [tasks, tiles] = clean(r.tasks, r.tiles);
   render();
   // Open ready for hjkl on the first task. With no tasks, open ready to type.
-  if (document.activeElement === document.body) (stops().find((el) => el.matches('.task')) ?? firstInput())?.focus();
+  // Not when embedded in a web page (the website demo): that would steal the page's focus.
+  if (window === top && document.activeElement === document.body) (stops().find((el) => el.matches('.task')) ?? firstInput())?.focus();
 });
 
 // Keys only reach the panel while it has focus (clicking the web page takes it away).

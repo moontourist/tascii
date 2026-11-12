@@ -23,8 +23,9 @@ check('manifest: no website access, content scripts, or outside messaging',
 check('manifest: strict content security policy',
   m.content_security_policy?.extension_pages === "default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'");
 check('manifest: version is MAJOR.MINOR.PATCH', /^\d+\.\d+\.\d+$/.test(m.version));
+// Extension tags are vX.Y.Z; the website has its own site-vX.Y.Z tags.
 let tag = '';
-try { tag = execFileSync('git', ['describe', '--tags', '--exact-match'], { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); } catch {}
+try { tag = execFileSync('git', ['tag', '--points-at', 'HEAD'], { cwd: root, stdio: ['ignore', 'pipe', 'ignore'] }).toString().split('\n').find((t) => /^v\d/.test(t)) ?? ''; } catch {}
 if (tag) check(`manifest: version matches git tag ${tag}`, tag === `v${m.version}`);
 
 const sources = readdirSync(root).filter((f) => /\.(js|html|css|json)$/.test(f));
