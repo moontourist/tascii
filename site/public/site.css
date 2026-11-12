@@ -36,7 +36,7 @@
 /* Theme change: the new theme wipes across from the left, in step with the demo. */
 ::view-transition-old(root) { animation: none; }
 ::view-transition-new(root) { animation: wipe 0.5s cubic-bezier(0.65, 0, 0.35, 1); }
-@keyframes wipe { from { clip-path: inset(0 100% 0 0); } }
+@keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } } /* both ends, or it can't slide */
 * { box-sizing: border-box; }
 html {
   background: var(--desk);

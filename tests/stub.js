@@ -30,16 +30,20 @@ document.startViewTransition = (update) => {
   return { ready: Promise.resolve() };
 };
 
+// Real chrome.storage hands objects back with their fields in sorted order, so this does too.
+const chromeCopy = (v) => JSON.parse(JSON.stringify(v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x)
+  ? Object.fromEntries(Object.entries(x).sort(([a], [b]) => (a < b ? -1 : 1))) : x)));
+
 const listeners = [];
 // __fire({ tasks: { newValue } }) pretends another window saved something.
 window.__fire = (changes) => listeners.forEach((f) => f(changes, 'local'));
 window.chrome = {
   storage: {
     local: {
-      get: async (defaults) => ({ ...defaults, ...structuredClone(__store) }),
+      get: async (defaults) => ({ ...defaults, ...chromeCopy(__store) }),
       set: async (o) => {
         Object.assign(__store, structuredClone(o));
-        __fire(Object.fromEntries(Object.entries(o).map(([k, v]) => [k, { newValue: structuredClone(v) }])));
+        __fire(Object.fromEntries(Object.entries(o).map(([k, v]) => [k, { newValue: chromeCopy(v) }])));
       },
     },
     onChanged: { addListener: (f) => listeners.push(f) },

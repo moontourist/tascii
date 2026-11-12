@@ -152,6 +152,28 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 ### v1.16.0: theme wipe
 - Changing the theme wipes the new one across from the left (a view transition, half a second). Not on first load, and not with reduced motion.
 
+## Animations in the real side panel
+The extension is the source of truth. The website's demo runs the extension's own `panel.js` and `panel.css`, so every fix here reaches the site too.
+Reported: crossing off a task threw its sparks from the panel's top-left corner, and changing theme didn't wipe, it just changed a moment late. Both looked right on the website.
+
+### v1.16.1: found and fixed
+- Sparks: Chrome's storage hands saved data back with each task's fields in sorted order. The panel compares that against its own copy to skip its own saves, and the different order made every save look like it came from another window. So it redrew the list mid-animation, the row vanished, and the sparks measured a box that was no longer on screen (position 0,0). The site's demo storage keeps the original order, so it never happened there. Fix: `clean()` puts task fields in sorted order, so the comparison matches.
+- Wipe: the animation only said where the wipe starts. With no end given, the browser can't slide between the two, so it held the old theme for half the time, then jumped. Fix: give both ends (also on the website).
+- Tests: the fake storage now sorts fields like Chrome's, and a new check makes sure the sparks start on the task's box. With the old code 28 checks fail.
+- Checked in a test copy of Chrome running the real extension: sparks start on the box at 13px and 26px text, with the list scrolled and not, and the wipe slides across.
+
+### Phase 2 (v1.17.0): animations that follow the text size
+- Bigger or smaller text moves every row. Sparks are placed once, by screen position, so changing the size (or scrolling) while they fly leaves them behind. Start them inside the task's row instead, so they move with it at any size.
+- Same check for the other moving parts: the strike line, the row slide, and tiles moving with J/K or dragging.
+- The test runs the cross-off at all six text sizes (13 to 26px) and with the list scrolled.
+
+### Phase 3 (v1.18.0): no redraws mid-animation
+- A real change from another window, or the midnight redraw, can still land during an animation. Hold it until the animation ends, then apply it.
+
+### Phase 4 (v1.19.0): check it the way you see it
+- `tests/motion.mjs` loads the real extension into a test copy of Chrome and saves frames of each animation (cross-off, restore, delete, theme wipe) at the smallest and largest text, so a change can be checked by eye before release.
+- A short checklist here for the side panel itself: each theme, smallest and largest text, a long scrolled list.
+
 ## Website: tascii-list.com
 Hosted on Cloudflare Pages from this repo. Website releases are tagged `site-vX.Y.Z`, separate from the extension's `vX.Y.Z`.
 
@@ -173,6 +195,9 @@ Hosted on Cloudflare Pages from this repo. Website releases are tagged `site-vX.
 ### site-v0.2.0: new logo, themes follow the demo
 - New block logo, sized to fill the readme window at any width.
 - Picking a theme in the demo changes the whole site, with the same wipe as the extension. Only the page runs the wipe; the demo inside it changes a moment later so it lands inside that wipe (two wipes at once can freeze Chrome).
+
+### site-v0.2.1: wipe fix
+- The theme wipe now slides instead of jumping halfway through (same fix as extension v1.16.1).
 
 ## Web app: tiling lists at tascii-list.com/app
 Many lists open at once, tiled like Hyprland: every list is a window, new windows split the screen, and all of them resize to fit the browser window.

@@ -43,7 +43,9 @@ function clean(rawTasks, rawTiles) {
   const ids = new Set(ts.map((t) => t.id));
   const tk = listOf(rawTasks)
     .filter((t) => typeof t?.id === 'string' && typeof t.text === 'string')
-    .map((t) => ({ ...t, done: t.done === true, deleted: t.deleted === true, tile: ids.has(t.tile) ? t.tile : ts[0].id }));
+    .map((t) => ({ ...t, done: t.done === true, deleted: t.deleted === true, tile: ids.has(t.tile) ? t.tile : ts[0].id }))
+    // Fields in a fixed order: chrome.storage hands them back sorted, and the own-save check compares JSON.
+    .map((t) => Object.fromEntries(Object.entries(t).sort(([a], [b]) => (a < b ? -1 : 1))));
   return [tk, ts];
 }
 
