@@ -16,7 +16,17 @@ a minimalist ASCII to-do list for Chrome's side panel.
 
 ## Use
 - Type a task and press Enter.
-- Click `[ ]` to mark it done, `x` to delete it.
+- Click a task to cross it off. It moves to **history**, where clicking it brings it back.
+- Click `x` to delete a task for good.
+
+## Keys
+| Key | Does |
+|---|---|
+| `Esc` or `↓` | leave the input and go to the list |
+| `j` / `k` (or `↓` / `↑`) | move down / up |
+| `h` / `l` (or `←` / `→`) | move between a task and its `x` |
+| `space` | cross off (or restore, in history) |
+| `i` or `/` | back to the input |
 
 Tasks are saved locally in Chrome and never leave your computer.
 

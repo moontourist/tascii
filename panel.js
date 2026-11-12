@@ -108,3 +108,30 @@ async function onRowClick(e) {
 }
 list.addEventListener('click', onRowClick);
 doneList.addEventListener('click', onRowClick);
+
+// Keyboard: j/k (or arrows) move between rows, h/l between a task and its x,
+// space crosses off (or restores in history), i or / goes to the input, Esc leaves it.
+const stops = () => [...document.querySelectorAll('.task, summary')].filter((el) => el.checkVisibility());
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
+  const a = document.activeElement;
+  if (a === input) {
+    if (e.key !== 'Escape' && e.key !== 'ArrowDown') return;
+    stops()[0]?.focus();
+    e.preventDefault();
+    return;
+  }
+  const li = a.closest('li');
+  const all = stops();
+  const at = all.indexOf(li ? li.querySelector('.task') : a);
+  switch (e.key) {
+    case 'j': case 'ArrowDown': all[at + 1]?.focus(); break;
+    case 'k': case 'ArrowUp': (all[at - 1] ?? input).focus(); break;
+    case 'h': case 'ArrowLeft': li?.querySelector('.task').focus(); break;
+    case 'l': case 'ArrowRight': li?.querySelector('.del').focus(); break;
+    case ' ': if (!li) return; li.querySelector('.task').click(); break; // summary keeps its own space
+    case 'i': case '/': input.focus(); break;
+    default: return;
+  }
+  e.preventDefault();
+});

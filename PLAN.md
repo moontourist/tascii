@@ -69,6 +69,17 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 - Tasks finished before this version have no `doneAt`, so history shows them without a date.
 - If your computer is set to reduce motion, the task moves straight to history with no animation.
 
+### v1.4.0: hotkeys
+- `j`/`k` move down/up the list (and into an open history), `h`/`l` move between a task and its `x`.
+- Space crosses off the focused task, or restores it in history. `i` or `/` goes to the input, `Esc` leaves it.
+- Arrow keys do the same as hjkl. Keys with cmd, ctrl or alt are left alone so browser shortcuts still work.
+
+### v1.4.1: security hardening and tests
+- Strict content security policy in the manifest: only the extension's own files can load, and no network, plugins or forms.
+- Stored data is checked when it's read, so junk in storage can't crash the panel.
+- Task length limit (500 characters).
+- `node tests/run.mjs` checks permissions, the policy, version/tag match, banned code patterns (HTML injection, `eval`, network calls), and runs the panel in headless Chrome with XSS payloads and corrupted data.
+
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.
 2. Click "Load unpacked" and pick this folder.
