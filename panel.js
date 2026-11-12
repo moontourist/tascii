@@ -2,7 +2,17 @@ const input = document.getElementById('new');
 const list = document.getElementById('list');
 const empty = document.getElementById('empty');
 const row = document.getElementById('row').content.firstElementChild;
+const today = document.getElementById('today');
 let tasks = [];
+
+const dayFmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+function showDate() {
+  const d = new Date();
+  today.textContent = dayFmt.format(d).toLowerCase(); // "thu 12 nov"
+  today.dateTime = d.toLocaleDateString('en-CA'); // "2026-11-12"
+}
+showDate();
+setInterval(showDate, 60_000); // a minute check survives the computer sleeping past midnight
 
 const save = () => chrome.storage.local.set({ tasks });
 

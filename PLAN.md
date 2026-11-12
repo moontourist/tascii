@@ -44,6 +44,31 @@ A minimalist, ASCII-style to-do list in Chrome's side panel. Gruvbox dark colors
 - Panels open in two windows stay in sync.
 - README explains how to install.
 
+## Round 2: readability and history
+
+Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes are too small to read and click, finishing a task should animate and move it to a history, and the date should show in the top right.
+
+### v1.1.0: header
+- Replace the big block logo with a small one-line header: `tascii` in yellow on the left, today's date on the right (for example `thu 12 nov`), with an ASCII rule underneath.
+- The date updates itself at midnight, because the side panel can stay open for days.
+- Plain text, so it stays sharp at any panel width and costs nothing to load.
+- Alternative if you'd rather keep the full logo: a fixed-size image of it. That means a small file to load each time, and it can't change size with the panel.
+
+### v1.2.0: bigger and easier to click
+- Base text size up from 13px to 15px. Rows get more line spacing.
+- Clicking anywhere on a task row (box or text) marks it done, not just the `[ ]`.
+- Every clickable part is at least 32px tall, and `x` gets a wider click area.
+- Hovering a row highlights it so you can see what you're about to click.
+- Long tasks still wrap instead of stretching the panel.
+
+### v1.3.0: cross-out animation and history
+- Marking a task done draws a line through it from left to right (about 0.3s), then the row fades and slides out of the list (about 0.2s).
+- The task is saved as done the moment you click, so closing the panel mid-animation loses nothing.
+- Done tasks get a `doneAt` date and move to a `history` section under the list. It's collapsed by default and shows a count, like `history (4)`.
+- History lists the newest first, each with the date it was finished. Click one to put it back in the list. `x` deletes it for good.
+- Tasks finished before this version have no `doneAt`, so history shows them without a date.
+- If your computer is set to reduce motion, the task moves straight to history with no animation.
+
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.
 2. Click "Load unpacked" and pick this folder.
@@ -51,4 +76,4 @@ A minimalist, ASCII-style to-do list in Chrome's side panel. Gruvbox dark colors
 4. After changing files, click the reload arrow on the extension's card.
 
 ## Later (optional)
-- Clear finished tasks, `sync` storage across computers, a custom icon, a light theme.
+- Clear all history, `sync` storage across computers, a custom icon, a light theme.

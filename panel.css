@@ -15,7 +15,9 @@ html {
 }
 body { margin: 0; padding: 12px; }
 ::selection { background: var(--bg1); }
-.logo { margin: 0 0 12px; color: var(--yellow); font: inherit; line-height: 1; }
+header { display: flex; justify-content: space-between; align-items: baseline; gap: 1ch; }
+h1 { margin: 0; color: var(--yellow); font: inherit; font-weight: bold; }
+#today { color: var(--muted); }
 /* Fixed-length rule: add characters if the panel ever gets wider than ~120 columns. */
 .rule { overflow: hidden; white-space: nowrap; color: var(--bg1); user-select: none; }
 .rule::before { content: "────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────"; }
