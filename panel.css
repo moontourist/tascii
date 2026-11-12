@@ -8,8 +8,8 @@
   --accent: #d79921; /* yellow, 4.7:1: titles, prompt, focus, progress */
   --line: #458588;   /* blue: borders and decoration only */
   --danger: #cc241d; /* red: delete only */
-  --dim: color-mix(in srgb, var(--text) 85%, var(--bg)); /* 4.5:1: dates, counts, hints, finished tasks */
-  --tint: color-mix(in srgb, var(--line) 30%, transparent); /* hover and selection */
+  --dim: color-mix(in srgb, var(--text) 90%, var(--bg)); /* 4.8:1: dates, counts, hints, finished tasks */
+  --tint: color-mix(in srgb, var(--line) 30%, transparent); /* text selection only: a hover background would drop text below 4.5:1 */
 }
 [hidden] { display: none !important; }
 * { box-sizing: border-box; }
@@ -65,7 +65,6 @@ input::placeholder { color: var(--dim); }
 
 ul { margin: 0; padding: 0; list-style: none; }
 li { display: flex; border-radius: 3px; }
-li:hover { background: var(--tint); }
 button {
   padding: 0;
   border: 0;
@@ -127,5 +126,5 @@ summary { padding: 8px 4px; border-radius: 3px; color: var(--dim); list-style: n
 summary::-webkit-details-marker { display: none; }
 summary::before { content: "+ "; }
 .history[open] summary::before { content: "- "; }
-summary:hover { background: var(--tint); color: var(--text); }
+summary:hover { color: var(--accent); }
 summary:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }

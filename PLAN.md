@@ -110,6 +110,9 @@ Feedback on v1.0.0: the logo is squished and doesn't scale, the text and boxes a
 - The panel opens on the first task, so hjkl work straight away. `i` goes to the input.
 - When the panel doesn't have keyboard focus (you clicked the web page), the title dims, borders go blue, and the hint line says to click the panel.
 
+### v1.8.1: contrast
+- Faded text raised to 90% aqua (4.8:1). Hover no longer adds a background, which pushed text under 4.5:1; the `[ ]` turning yellow shows hover instead.
+
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.
 2. Click "Load unpacked" and pick this folder.
