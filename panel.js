@@ -6,15 +6,22 @@ const doneList = document.getElementById('done');
 const count = document.getElementById('count');
 const row = document.getElementById('row').content.firstElementChild;
 const today = document.getElementById('today');
+const progress = document.getElementById('progress');
+const fill = document.getElementById('fill');
+const rest = document.getElementById('rest');
+const tally = document.getElementById('tally');
 const calm = matchMedia('(prefers-reduced-motion: reduce)');
 let tasks = [];
 
 const dayFmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 const shortFmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
+const dayKey = (d) => (isNaN(d) ? '' : d.toLocaleDateString('en-CA')); // "2026-11-12"
 function showDate() {
   const d = new Date();
+  const changed = today.dateTime && today.dateTime !== dayKey(d);
   today.textContent = dayFmt.format(d).toLowerCase(); // "thu 12 nov"
-  today.dateTime = d.toLocaleDateString('en-CA'); // "2026-11-12"
+  today.dateTime = dayKey(d);
+  if (changed) render(); // new day: today's progress starts over
 }
 showDate();
 setInterval(showDate, 60_000); // a minute check survives the computer sleeping past midnight
@@ -56,11 +63,38 @@ function render() {
   empty.hidden = open.length > 0;
   historyBox.hidden = done.length === 0;
   count.textContent = done.length;
+  const doneToday = done.filter((t) => dayKey(new Date(t.doneAt)) === today.dateTime).length;
+  drawBar(doneToday, open.length + doneToday);
 
   // Same row if it's still in the same list, else its neighbour, else the input.
   if (!was) return;
   const find = (id) => [...was.ul.children].find((x) => x.dataset.id === id)?.querySelector(was.part);
   (find(was.id) ?? find(was.near) ?? input).focus();
+}
+
+// ASCII bar of tasks finished today. Grows one # at a time when it goes up.
+const BAR = 20;
+let shown = -1; // bar chars on screen; -1 until the first draw, which is instant
+let growing;
+function drawBar(n, total) {
+  progress.hidden = total === 0;
+  tally.textContent = `${n}/${total} today`;
+  const target = total ? Math.round((n / total) * BAR) : 0;
+  const paint = () => {
+    fill.textContent = '#'.repeat(shown);
+    rest.textContent = '-'.repeat(BAR - shown);
+  };
+  clearInterval(growing);
+  if (shown < 0 || target <= shown || calm.matches) {
+    shown = target;
+    paint();
+    return;
+  }
+  growing = setInterval(() => {
+    shown++;
+    paint();
+    if (shown >= target) clearInterval(growing);
+  }, 25);
 }
 
 const loaded = chrome.storage.local.get({ tasks: [] }).then((r) => {

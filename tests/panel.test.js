@@ -52,6 +52,8 @@ async function main() {
   check('done row moves to history', texts().join() === 'typed before load' && texts(doneList).join() === 'old task');
   check('history count shows', count.textContent === '1' && !historyBox.hidden);
   check('history shows the finish date', rows(doneList)[0].querySelector('.when').textContent !== '');
+  await wait(300); // the bar grows one # at a time
+  check('progress bar counts today', tally.textContent === '1/2 today' && fill.textContent === '#'.repeat(10) && rest.textContent === '-'.repeat(10));
   task(0, doneList).click();
   await wait();
   check('clicking a history task puts it back', texts().includes('old task') && historyBox.hidden);
@@ -93,7 +95,7 @@ async function main() {
   task(0).nextElementSibling.focus();
   task(0).nextElementSibling.click();
   await wait();
-  check('empty list shows a message', !empty.hidden);
+  check('empty list shows the cat', !empty.hidden && empty.querySelector('pre').textContent.includes('o.o'));
   check('focus returns to input when the list empties', document.activeElement === input);
 }
 

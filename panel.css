@@ -6,7 +6,10 @@
   --yellow: #fabd2f;
   --green: #b8bb26;
   --red: #fb4934;
+  --aqua: #8ec07c;
+  --orange: #fe8019;
 }
+[hidden] { display: none !important; }
 * { box-sizing: border-box; }
 html {
   background: var(--bg);
@@ -59,7 +62,16 @@ button:focus-visible { outline: 1px solid var(--yellow); outline-offset: -1px; }
 .del:hover { color: var(--red); }
 .done .box { color: var(--green); }
 .done .text { color: var(--muted); text-decoration: line-through; }
-#empty { margin: 8px 4px; color: var(--muted); }
+#empty { display: flex; gap: 2ch; align-items: center; margin: 12px 4px; color: var(--muted); }
+#empty pre { margin: 0; font: inherit; line-height: 1.2; color: var(--orange); }
+#empty p { margin: 0; }
+
+/* Today's progress: [#######-------------] 2/5 */
+#progress { display: flex; justify-content: space-between; gap: 1ch; padding: 0 4px; color: var(--muted); white-space: pre; }
+#fill { color: var(--green); }
+#rest { color: var(--bg1); }
+
+footer { margin-top: 16px; padding: 0 4px; color: var(--muted); font-size: 12px; opacity: 0.7; }
 
 /* Cross-out: a line grows left to right under the label, then the row fades out. */
 .label {
