@@ -172,7 +172,7 @@ footer { margin-top: 16px; padding: 0 4px; color: var(--dim); font-size: 0.8em; 
 /* Theme change: the new theme wipes across from the left (prefs.js starts it). */
 ::view-transition-old(root) { animation: none; }
 ::view-transition-new(root) { animation: wipe 0.5s cubic-bezier(0.65, 0, 0.35, 1); }
-@keyframes wipe { from { clip-path: inset(0 100% 0 0); } }
+@keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } } /* both ends, or it can't slide */
 
 .when { flex: none; color: var(--dim); }
 .history { margin-top: 4px; }

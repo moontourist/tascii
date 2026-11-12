@@ -109,6 +109,7 @@ async function main() {
   q('.history').open = false;
 
   // Done: animate, then move to history.
+  const box0 = rows()[0].querySelector('.box').getBoundingClientRect();
   task(0).click();
   await wait(20);
   check('done is saved right away', __store.tasks.find((t) => t.id === 'a').done === true);
@@ -117,6 +118,11 @@ async function main() {
   task(0).click(); // a second click mid-animation must not undo it
   await wait(300);
   check('sparks fly', document.querySelectorAll('.spark').length > 0);
+  // Our own save comes back through storage.onChanged; it must not redraw the list mid-animation,
+  // or the row disappears and the sparks start from the top-left corner.
+  const spark = document.querySelector('.spark');
+  check('sparks start on the task\'s box', Math.abs(parseFloat(spark?.style.left) - (box0.left + box0.width / 2)) < 2
+    && Math.abs(parseFloat(spark?.style.top) - (box0.top + box0.height / 2)) < 2);
   await wait(FINISH - 300);
   check('sparks clean up after themselves', document.querySelectorAll('.spark').length === 0);
   check('done row moves to history', texts().join() === 'second' && texts(0, '.done').join() === 'old task');
