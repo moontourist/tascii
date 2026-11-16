@@ -30,7 +30,10 @@ function showDate() {
 showDate();
 setInterval(showDate, 60_000); // a minute check survives the computer sleeping past midnight
 
-const save = () => chrome.storage.local.set({ tasks, tiles });
+// Where the list lives: a tascii home server (sync.js) when one is set in prefs or this page came from
+// one, else this browser's extension storage (or the stand-in the website demo and the tests provide).
+const storage = prefs.server ? serverStorage(prefs.server.url, prefs.server.password) : window.chrome?.storage ?? serverStorage('');
+const save = () => storage.local.set({ tasks, tiles });
 
 // Stored data could come from an older version, a bug, or a hand edit, so check its shape.
 // Tasks from before tiles existed (or whose tile is gone) land in the first tile.
@@ -204,7 +207,7 @@ function drawBar(n, total) {
   }, 25);
 }
 
-chrome.storage.local.get({ tasks: [], tiles: [] }).then((r) => {
+storage.local.get({ tasks: [], tiles: [] }).then((r) => {
   [tasks, tiles] = clean(r.tasks, r.tiles);
   render();
   // Open ready for hjkl on the first task. With no tasks, open ready to type.
@@ -222,7 +225,7 @@ addEventListener('blur', showFocus);
 showFocus();
 
 // A panel open in another window changed something: show its version.
-chrome.storage.onChanged.addListener((changes, area) => {
+storage.onChanged.addListener((changes, area) => {
   if (area !== 'local' || !(changes.tasks || changes.tiles)) return;
   const next = clean(changes.tasks ? changes.tasks.newValue : tasks, changes.tiles ? changes.tiles.newValue : tiles);
   if (JSON.stringify(next) === JSON.stringify(clean(tasks, tiles))) return; // our own save
@@ -570,6 +573,48 @@ prefsBtn.addEventListener('click', () => togglePrefs());
 prefsBox.addEventListener('change', (e) => {
   prefs.theme = e.target.value;
   savePrefs();
+});
+// Server (extension only): use a tascii home server's list instead of this browser's.
+// Empty the address to go back: this browser's list is never touched, so it's all still there.
+const serverPref = document.getElementById('server-pref');
+const serverUrl = document.getElementById('server-url');
+const serverPw = document.getElementById('server-pw');
+const serverNote = document.getElementById('server-note');
+serverPref.hidden = !window.chrome?.permissions; // not on the server's own page or in the website demo
+serverUrl.value = prefs.server?.url ?? '';
+serverPw.value = prefs.server?.password ?? '';
+serverNote.textContent = prefs.server ? 'connected' : 'this browser only';
+async function connect() {
+  const say = (t) => { serverNote.textContent = t; };
+  const url = serverUrl.value.trim();
+  if (!url) {
+    if (!prefs.server) return say('this browser only');
+    prefs.server = null;
+    savePrefs();
+    return location.reload();
+  }
+  let origin;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') throw new Error();
+    origin = u.origin;
+  } catch {
+    return say("that isn't a web address");
+  }
+  // Chrome asks you to allow this one address. It has to come straight after the click.
+  if (!(await chrome.permissions.request({ origins: [`${origin}/*`] }))) return say('needs your permission to reach it');
+  say('connecting...');
+  const { status, list } = await checkServer(url, serverPw.value);
+  if (status !== 'ok') return say(status === 'password' ? 'wrong password' : "can't reach it");
+  // A new, empty server gets this list. Otherwise the server's list wins.
+  if (!list.tasks.length && !list.tiles.length && !(await uploadList(url, serverPw.value, tasks, tiles))) return say("couldn't copy your list to it");
+  prefs.server = { url, password: serverPw.value };
+  savePrefs();
+  location.reload();
+}
+document.getElementById('server-save').addEventListener('click', connect);
+serverPref.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.isComposing && e.target.matches('input')) connect();
 });
 document.getElementById('smaller').addEventListener('click', () => resize(-1));
 document.getElementById('bigger').addEventListener('click', () => resize(1));

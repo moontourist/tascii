@@ -59,20 +59,20 @@ export function apply(s, op) {
   }
 }
 
-// --- The page: the extension's panel.html with client.js standing in for chrome.storage. ---
-// Plus what a phone needs: the screen width, and the manifest and icon for "Add to Home Screen".
+// --- The page: the extension's panel.html. With no chrome.storage here, panel.js keeps the list on
+// this server through sync.js. Plus what a phone needs: the screen width, and the manifest and icon
+// for "Add to Home Screen". ---
 const page = readFileSync(join(root, 'panel.html'), 'utf8')
   .replace('<meta charset="utf-8">', '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
     + '<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/app-180.png">'
-    + '<meta name="theme-color" content="#282828">')
-  .replace('<script src="panel.js"></script>', '<script src="client.js"></script><script src="panel.js"></script>');
-if (!page.includes('client.js') || !page.includes('viewport')) throw new Error("couldn't add client.js to panel.html");
+    + '<meta name="theme-color" content="#282828">');
+if (!page.includes('viewport')) throw new Error("couldn't add the phone tags to panel.html");
 const files = {
   '/': ['text/html', page],
   '/panel.css': ['text/css', 'panel.css'],
   '/panel.js': ['text/javascript', 'panel.js'],
   '/prefs.js': ['text/javascript', 'prefs.js'],
-  '/client.js': ['text/javascript', 'server/client.js'],
+  '/sync.js': ['text/javascript', 'sync.js'],
   ...Object.fromEntries([16, 32, 48, 128].map((n) => [`/icons/icon-${n}.png`, ['image/png', `icons/icon-${n}.png`]])),
   '/favicon.ico': ['image/png', 'icons/icon-32.png'],
   '/manifest.webmanifest': ['application/manifest+json', 'server/manifest.webmanifest'],
@@ -99,8 +99,11 @@ export const server = createServer(async (req, res) => {
     });
     res.end(body);
   };
-  if (!allowed(req)) return send(401, 'text/plain', 'password needed', { 'WWW-Authenticate': 'Basic realm="tascii"' });
   const url = new URL(req.url, 'http://x');
+  // The page asks the browser for the password (it shows a login box). The list itself just says no,
+  // so a wrong password typed into the extension's prefs doesn't pop up a login box too.
+  const ask = url.pathname.startsWith('/api/') ? {} : { 'WWW-Authenticate': 'Basic realm="tascii"' };
+  if (!allowed(req)) return send(401, 'text/plain', 'password needed', ask);
 
   if (req.method === 'GET' && url.pathname === '/api/state') {
     if (url.searchParams.get('since') === String(state.rev)) return send(204, 'text/plain', '');

@@ -3,7 +3,7 @@
 #   docker run -d --name tascii --restart unless-stopped -p 8080:8080 -v tascii-data:/data -e TASCII_PASSWORD=... tascii
 FROM node:22-alpine
 WORKDIR /app
-COPY panel.html panel.css panel.js prefs.js ./
+COPY panel.html panel.css panel.js prefs.js sync.js ./
 COPY icons ./icons
 COPY server ./server
 RUN mkdir /data && chown node /data

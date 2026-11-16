@@ -166,15 +166,15 @@ Reported: crossing off a task threw its sparks from the panel's top-left corner,
 - The website's demo no longer switches theme on its own timer, which sometimes beat the page's wipe. It asks the page to run one wipe (`wipeIn` in `prefs.js`) and switches inside it, so both change together.
 - Prefs that come back unchanged (our own save, echoed from another window) no longer redraw.
 
-### Phase 2 (v1.17.0): animations that follow the text size
+### Phase 2 (v1.19.0): animations that follow the text size
 - Bigger or smaller text moves every row. Sparks are placed once, by screen position, so changing the size (or scrolling) while they fly leaves them behind. Start them inside the task's row instead, so they move with it at any size.
 - Same check for the other moving parts: the strike line, the row slide, and tiles moving with J/K or dragging.
 - The test runs the cross-off at all six text sizes (13 to 26px) and with the list scrolled.
 
-### Phase 3 (v1.18.0): no redraws mid-animation
-- A real change from another window, or the midnight redraw, can still land during an animation. Hold it until the animation ends, then apply it.
+### Phase 3 (v1.20.0): no redraws mid-animation
+- A real change from another window, or the midnight redraw, can still land during an animation. Hold it until the animation ends, then apply it. More likely with a home server, whose changes arrive every few seconds.
 
-### Phase 4 (v1.19.0): check it the way you see it
+### Phase 4 (v1.21.0): check it the way you see it
 - `tests/motion.mjs` loads the real extension into a test copy of Chrome and saves frames of each animation (cross-off, restore, delete, theme wipe) at the smallest and largest text, so a change can be checked by eye before release.
 - A short checklist here for the side panel itself: each theme, smallest and largest text, a long scrolled list.
 
@@ -261,7 +261,7 @@ Run tascii on your own server, open it from any device (phone included, no app s
 
 ### How sync works
 - Devices never send a whole list. They send small changes, each naming a task or tile by id: "task 12: done is now true", "delete task 7", "tile order is now a, c, b". The server applies them to its own copy, so two devices editing at once both keep their work.
-- `server/client.js` stands in for `chrome.storage`, like the website demo's `shim.js`. When `panel.js` saves, it compares the new list to the one it last saw and sends only the differences. `panel.js` itself doesn't change.
+- `sync.js` has `serverStorage()`, which works like `chrome.storage`. `panel.js` uses it when the page came from a server (no `chrome.storage` there) or a server is set in the extension's prefs. When `panel.js` saves, it compares the new list to the one it last saw and sends only the differences.
 - Removing wins: changing a task another device already removed for good does nothing.
 - Other devices' changes arrive by asking the server every 3 seconds, and straight away when the page comes back into view.
 - No Node packages. Built-ins only.
@@ -271,7 +271,7 @@ Run tascii on your own server, open it from any device (phone included, no app s
 - Optional password (`TASCII_PASSWORD`): the browser asks for it once and remembers it.
 - Only JSON changes are accepted, so another website can't edit your list from your browser. Bad changes are skipped.
 - No connection: the list dims, "offline" shows by the date, and editing is blocked until the server answers.
-- Plain http fix: browsers hide `crypto.randomUUID` (used for new ids) on http pages other than localhost, so `client.js` fills it in.
+- Plain http fix: browsers hide `crypto.randomUUID` (used for new ids) on http pages other than localhost, so `sync.js` fills it in.
 - Tiling (in `panel.js`, so the extension gets it too when its panel is wide): on screens 720px and wider, tiles fill the window like Hyprland's dwindle layout. Each new tile splits the last one, side by side if that space is wide, stacked if it's tall. Each tile scrolls on its own. Dragging a tile's bar onto another tile moves it there, and J/K still reorder. Moves glide like Hyprland's: each tile jumps to its new place, then a stretch (`transform`, drawn by the graphics card) eases it there on Hyprland's usual curve, so the text isn't laid out again every frame. New tiles pop in, closed ones pop out while the others grow into the space. Window resizes follow instantly. Narrow screens (phones, the side panel) keep one column. Collapsed tiles keep their slot for now.
 - `Dockerfile`. Checks: `node server/test.mjs` (two fake devices race each other, offline and back, password, bad input).
 
@@ -282,10 +282,14 @@ Run tascii on your own server, open it from any device (phone included, no app s
 - Opening the page on a phone doesn't focus the input, so the keyboard stays down.
 
 ### Phase 3 (v1.18.0 + server-v0.3.0): the extension uses your server
-- Prefs gets a "server" field (URL and password). Empty means local only, as today.
-- Chrome asks permission for just that one address when you save it (`optional_host_permissions`), so the extension still has no website access by default.
-- When set, the panel loads `client.js` sync instead of `chrome.storage`. On first connect the server wins. If the server is empty, offer to upload the local list instead.
-- Update the privacy page, the store listing and the test rules that ban network calls (allow them only to the address you entered).
+- Prefs has a "server" row (address and password) in the extension only. Empty means this browser only, as before.
+- `[ connect ]` asks Chrome for that one address (`optional_host_permissions`), so the extension still has no website access by default. Then it checks the server answers and the password is right before switching, so a typo can't leave you on a broken list.
+- An empty server gets this browser's list. Otherwise the server's list wins. Either way this browser's own list stays saved, untouched: empty the address to get it back.
+- The address and password are kept with the theme and text size (`prefs.js`, this computer only). Other open panels switch over too.
+- The server only asks the browser for a password (the login box) on the page itself. The list's own addresses (`/api/`) just say no, so a wrong password in prefs doesn't pop up a login box.
+- `connect-src` in the extension's security policy allows http and https, since the address is yours to choose. Scripts still only come from the extension itself.
+- Privacy page, README and store listing say what's sent where. Test rules: network calls only in `sync.js`, and only to the server's address.
+- Checks: a test run connects the real panel to a real server (bad address, unreachable, wrong password, then right), adds a task that lands on the server and not in the browser, and disconnects back to the local list.
 
 ### Phase 4 (server-v0.4.0): works with no signal
 - A small service worker caches the page so it opens offline.

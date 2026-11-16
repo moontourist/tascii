@@ -21,6 +21,7 @@ const presets = {
     tasks: ['a', 'b', 'c'].map((tile) => ({ id: `t${tile}`, tile, text: `in ${tile}`, done: false })),
   },
 };
+presets['#server'] = presets['']; // a local list to take to the server
 window.__store = structuredClone(presets[location.hash]);
 window.__errors = [];
 addEventListener('error', (e) => __errors.push(e.message));
@@ -54,3 +55,5 @@ window.chrome = {
     onChanged: { addListener: (f) => listeners.push(f) },
   },
 };
+// Only the real extension can ask for website access; the #server run pretends you said yes.
+if (location.hash === '#server') chrome.permissions = { request: async () => true };

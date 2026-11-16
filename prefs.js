@@ -14,6 +14,9 @@ function readPrefs() {
   return {
     theme: THEMES.includes(p.theme) ? p.theme : 'gruvbox',
     size: SIZES.includes(p.size) ? p.size : 15,
+    // A tascii home server to keep the list on (extension only, see sync.js). null: this browser.
+    server: typeof p.server?.url === 'string' && /^https?:\/\//.test(p.server.url)
+      ? { url: p.server.url, password: typeof p.server.password === 'string' ? p.server.password : '' } : null,
   };
 }
 
@@ -55,7 +58,9 @@ function wipeIn(inner) {
 // Another window changed them.
 addEventListener('storage', (e) => {
   if (e.key !== 'prefs') return;
+  const was = JSON.stringify(prefs.server);
   prefs = readPrefs();
+  if (JSON.stringify(prefs.server) !== was) return location.reload(); // switched server: load that list
   applyPrefs();
   window.showPrefs?.();
 });

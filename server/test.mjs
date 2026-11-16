@@ -20,12 +20,14 @@ const check = (name, ok) => {
   if (!ok) failed.push(name);
 };
 
-// A device: client.js in its own sandbox. `up` false makes its network fail.
-const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'client.js'), 'utf8');
+// A device: sync.js in its own sandbox, like the server's page (address '' is the page's own server).
+// `up` false makes its network fail.
+const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'sync.js'), 'utf8');
 function device() {
   const d = { up: true, events: {}, classes: new Set(), seen: [] };
   const window = {
-    fetch: (u, o = {}) => (d.up ? fetch(base + u, { ...o, headers: { ...o.headers, ...auth } }) : Promise.reject(new Error('no signal'))),
+    fetch: (u, o) => (d.up ? fetch(u.startsWith('http') ? u : base + u, o) : Promise.reject(new Error('no signal'))),
+    btoa,
     setInterval: () => {}, // polls run by hand below
     setTimeout,
     structuredClone,
@@ -40,16 +42,21 @@ function device() {
   };
   window.window = window;
   vm.runInNewContext(src, window);
-  d.store = window.chrome.storage.local;
-  window.chrome.storage.onChanged.addListener((c) => d.seen.push(c));
+  const storage = window.serverStorage('', 'pw');
+  d.store = storage.local;
+  storage.onChanged.addListener((c) => d.seen.push(c));
+  d.sync = window; // checkServer and uploadList
   d.poll = () => d.events.focus();
   d.uuid = () => window.crypto.randomUUID();
   return d;
 }
 
 // Auth and the cross-site guard.
-check('no password: refused', (await fetch(base)).status === 401);
-check('right password: page served with client.js', (await (await fetch(base, { headers: auth })).text()).includes('client.js'));
+const page401 = await fetch(base);
+const api401 = await fetch(`${base}api/state`);
+check('no password: refused, and the page asks for it', page401.status === 401 && page401.headers.has('www-authenticate'));
+check("no password: the list refuses without popping up a login box", api401.status === 401 && !api401.headers.has('www-authenticate'));
+check('right password: page served with sync.js', (await (await fetch(base, { headers: auth })).text()).includes('sync.js'));
 // Add to Home Screen: the page links the manifest and icon, and every icon it names is served.
 const html = await (await fetch(base, { headers: auth })).text();
 const manifest = await (await fetch(`${base}manifest.webmanifest`, { headers: auth })).json();
@@ -63,6 +70,16 @@ check('non-JSON post (another site trying to edit): refused', form.status === 41
 // The race from the plan: both devices load the same list, then edit before hearing from each other.
 const laptop = device();
 const phone = device();
+// Connecting from the extension: checks before switching, then copying a list to an empty server.
+const { checkServer, uploadList } = laptop.sync;
+check('connect: wrong password caught', (await checkServer(base, 'nope')).status === 'password');
+check('connect: no server there caught', (await checkServer('http://localhost:1', 'pw')).status === 'unreachable');
+check('connect: right password sees an empty list', (await checkServer(base, 'pw')).list?.tasks.length === 0);
+const local = { tiles: [{ id: 'L', name: 'local', collapsed: false }], tasks: [{ id: 'l1', tile: 'L', text: 'from this browser', done: false }] };
+check('connect: a local list copies to an empty server', await uploadList(base, 'pw', local.tasks, local.tiles)
+  && (await checkServer(base, 'pw')).list.tasks[0]?.text === 'from this browser');
+await fetch(`${base}api/ops`, { method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' },
+  body: JSON.stringify([{ op: 'task-del', id: 'l1' }, { op: 'tile-del', id: 'L' }]) }); // empty again for the race below
 const ids = new Set(Array.from({ length: 50 }, laptop.uuid));
 check('plain http: new ids still work (randomUUID filled in)', ids.size === 50 && [...ids].every((u) => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(u)));
 const empty = await laptop.store.get({ tasks: [], tiles: [] });

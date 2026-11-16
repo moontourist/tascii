@@ -24,7 +24,7 @@ tascii is a minimalist to-do list that lives in Chrome's side panel, drawn in pl
 - Fully keyboard driven: j/k move, space crosses off, e edits, x deletes, u undoes, i adds, J/K move a tile.
 - Three themes (gruvbox, dark, light) and text sizes from 13 to 26px.
 
-Private by design: tasks are saved only in your browser. No account, no tracking, no network requests.
+Private by design: tasks are saved only in your browser. No account, no tracking. Optionally, keep your list on a tascii server you host yourself, so your phone sees it too.
 
 Open source: https://github.com/moontourist/tascii
 ```
@@ -56,6 +56,10 @@ A to-do list shown in Chrome's side panel.
 - `storage`:
   ```
   Saves the user's tasks and lists locally in the browser so they are still there next time.
+  ```
+- Optional host permissions (`http://*/*`, `https://*/*`):
+  ```
+  Only requested if the user types the address of their own self-hosted tascii server into prefs, and then only for that one address. The extension keeps the to-do list on that server so the user's other devices share it. Nothing is sent anywhere else.
   ```
 
 **Remote code:** No, I am not using remote code. (All scripts ship in the package; the content security policy only allows the extension's own files.)

@@ -41,7 +41,9 @@ From the Chrome Web Store once the listing is approved. Until then:
 If the keys do nothing, click the panel first: the line at the bottom says so when the web page has your keyboard.
 
 ## Private
-Tasks are saved in your browser and never leave your computer. No account, no tracking, no network requests. The extension asks for two permissions, the side panel and storage, so it can't see the pages you visit. [Privacy policy](https://tascii-list.com/privacy).
+Tasks are saved in your browser and never leave your computer. No account, no tracking, no network requests. The extension asks for two permissions, the side panel and storage, so it can't see the pages you visit.
+
+Want the same list on your phone? Run your own tascii server in Docker (see "Home server" in [PLAN.md](PLAN.md)) and put its address in prefs. Chrome asks to let the extension reach that one address, and your list then lives on your server. Nothing goes anywhere else. [Privacy policy](https://tascii-list.com/privacy).
 
 ## How it's built
 Plain HTML, CSS and JavaScript, with no build step and no dependencies.

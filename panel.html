@@ -18,6 +18,11 @@
   <div class="pref"><span class="key">size</span><span class="opts">
     <button id="smaller" aria-label="Smaller text">[-]</button><output id="size-out" aria-live="polite"></output><button id="bigger" aria-label="Larger text">[+]</button>
   </span></div>
+  <div class="pref" id="server-pref" hidden><span class="key">server</span><span class="opts server">
+    <label class="field"><span aria-hidden="true">&gt;</span><input id="server-url" type="url" placeholder="your tascii server's address" aria-label="Server address" spellcheck="false" autocomplete="off"></label>
+    <label class="field"><span aria-hidden="true">&gt;</span><input id="server-pw" type="password" placeholder="password, if it has one" aria-label="Server password" autocomplete="off"></label>
+    <span><button id="server-save">[ connect ]</button> <span id="server-note" aria-live="polite"></span></span>
+  </span></div>
 </section>
 <footer aria-hidden="true"><span class="keys">j/k move · spc done · e edit · x del · u undo · i add · J/K tile · p prefs · +/- size</span><span class="hint">click the panel to use keys</span></footer>
 <template id="tile"><section class="tile">
@@ -30,4 +35,5 @@
   </div>
 </section></template>
 <template id="row"><li><button class="task"><span class="box" aria-hidden="true"></span><span class="text"><span class="label"></span></span><span class="when"></span></button><button class="del" aria-label="Delete">x</button></li></template>
+<script src="sync.js"></script>
 <script src="panel.js"></script>

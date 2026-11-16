@@ -26,6 +26,7 @@ const pointer = (type, el, y) => (el ?? window).dispatchEvent(new PointerEvent(t
 
 async function main() {
   await wait(20);
+  check('server setting: hidden outside the real extension', document.getElementById('server-pref').hidden);
   check('old tasks move into a first tile', names().join() === 'todo' && texts().join() === 'old task');
   check('opens on the first task, ready for hjkl', focused() === task(0));
   check('a single tile has no delete button', getComputedStyle(q('.close')).display === 'none');
@@ -339,7 +340,54 @@ async function tiling() {
   check('tiled: the closed tile is gone and the rest fill the space', allTiles().length === 3 && fits());
 }
 
-(location.hash === '#corrupt' ? corrupt() : location.hash === '#tiled' ? tiling() : main())
+// The extension with a real home server (run.mjs starts one). Connecting and disconnecting reload
+// the page, so the phase and the results so far wait in localStorage between loads.
+async function serverRun() {
+  const url = `http://localhost:${new URLSearchParams(location.search).get('port')}`;
+  const remote = () => fetch(`${url}/api/state`, { headers: { Authorization: `Basic ${btoa('x:pw')}` } }).then((r) => r.json());
+  const note = () => document.getElementById('server-note').textContent;
+  const connectTo = async (address, password) => {
+    document.getElementById('server-url').value = address;
+    document.getElementById('server-pw').value = password;
+    document.getElementById('server-save').click();
+    await wait(300);
+  };
+  const reloadInto = (next) => {
+    localStorage.setItem('test-phase', next);
+    localStorage.setItem('test-results', JSON.stringify(results));
+  };
+  const phase = localStorage.getItem('test-phase') ?? 'local';
+  results.push(...JSON.parse(localStorage.getItem('test-results') ?? '[]'));
+  await wait(50);
+  if (phase === 'local') {
+    check('server: the setting shows in the extension', !document.getElementById('server-pref').hidden && note() === 'this browser only');
+    await connectTo('not an address', '');
+    check('server: a bad address is refused', note() === "that isn't a web address");
+    await connectTo('http://localhost:1', '');
+    check('server: an unreachable server is caught before switching', note() === "can't reach it" && !prefs.server);
+    await connectTo(url, 'nope');
+    check('server: a wrong password is caught before switching', note() === 'wrong password' && !prefs.server);
+    reloadInto('server');
+    await connectTo(url, 'pw'); // an empty server: it gets this list, then the page reloads
+    return;
+  }
+  if (phase === 'server') {
+    check('server: an empty server gets the local list', texts().join() === 'old task' && (await remote()).tasks.some((t) => t.text === 'old task'));
+    check('server: connected', note() === 'connected' && prefs.server?.url === url);
+    type('from the extension');
+    await wait(300);
+    check('server: new tasks go to the server, not this browser', (await remote()).tasks.some((t) => t.text === 'from the extension')
+      && !__store.tasks.some((t) => t.text === 'from the extension'));
+    reloadInto('back');
+    await connectTo('', ''); // empty address: back to this browser, the page reloads
+    return;
+  }
+  check("server: emptying the address brings back this browser's list", !prefs.server && texts().join() === 'old task' && note() === 'this browser only');
+  localStorage.removeItem('test-phase');
+  localStorage.removeItem('test-results');
+}
+
+({ '#corrupt': corrupt, '#tiled': tiling, '#server': serverRun }[location.hash] ?? main)()
   .catch((e) => check(`no crash (${e})`, false))
   .finally(() => {
     check('no page errors', __errors.length === 0);

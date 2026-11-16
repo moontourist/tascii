@@ -7,6 +7,6 @@ node tests/run.mjs > /dev/null || { node tests/run.mjs | grep FAIL; exit 1; }
 version=$(node -p "require('./manifest.json').version")
 out="tascii-v$version.zip"
 rm -f "$out"
-zip -q -X "$out" manifest.json background.js panel.html panel.css panel.js prefs.js \
+zip -q -X "$out" manifest.json background.js panel.html panel.css panel.js prefs.js sync.js \
   icons/icon-16.png icons/icon-32.png icons/icon-48.png icons/icon-128.png
 echo "$out"
