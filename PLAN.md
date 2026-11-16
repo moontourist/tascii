@@ -256,8 +256,52 @@ Plain JavaScript, no framework. The slow part of a page like this is drawing, an
 - The size budget test, and the same strict content security policy as the landing page.
 - `[ open the web app ]` on the landing page.
 
-### Not planned
-- Syncing between the web app and the extension, or between computers. That needs accounts and a server, and tascii's promise is that nothing leaves your browser. Export and import cover moving lists by hand.
+## Home server: self-hosted tascii in Docker
+Run tascii on your own server, open it from any device (phone included, no app store), and optionally point the extension at it. The server holds the one true copy of the list. Nothing goes to anyone else's server, so the promise becomes "nothing leaves your devices and your server". Without a server set up, the extension works exactly as before.
+
+### How sync works
+- Devices never send a whole list. They send small changes, each naming a task or tile by id: "task 12: done is now true", "delete task 7", "tile order is now a, c, b". The server applies them to its own copy, so two devices editing at once both keep their work.
+- `server/client.js` stands in for `chrome.storage`, like the website demo's `shim.js`. When `panel.js` saves, it compares the new list to the one it last saw and sends only the differences. `panel.js` itself doesn't change.
+- Removing wins: changing a task another device already removed for good does nothing.
+- Other devices' changes arrive by asking the server every 3 seconds, and straight away when the page comes back into view.
+- No Node packages. Built-ins only.
+
+### Phase 1 (server-v0.1.0, shipped with phase 2 and extension v1.17.0): the container
+- `server/server.mjs`: serves the panel as a web page and saves the list to one JSON file in `/data` (a Docker volume, so it survives updates). Each save writes a new file and swaps it in, so a crash can't leave half a file. A corrupt file stops the server instead of being overwritten.
+- Optional password (`TASCII_PASSWORD`): the browser asks for it once and remembers it.
+- Only JSON changes are accepted, so another website can't edit your list from your browser. Bad changes are skipped.
+- No connection: the list dims, "offline" shows by the date, and editing is blocked until the server answers.
+- Plain http fix: browsers hide `crypto.randomUUID` (used for new ids) on http pages other than localhost, so `client.js` fills it in.
+- Tiling (in `panel.js`, so the extension gets it too when its panel is wide): on screens 720px and wider, tiles fill the window like Hyprland's dwindle layout. Each new tile splits the last one, side by side if that space is wide, stacked if it's tall. Each tile scrolls on its own. Dragging a tile's bar onto another tile moves it there, and J/K still reorder. Moves glide like Hyprland's: each tile jumps to its new place, then a stretch (`transform`, drawn by the graphics card) eases it there on Hyprland's usual curve, so the text isn't laid out again every frame. New tiles pop in, closed ones pop out while the others grow into the space. Window resizes follow instantly. Narrow screens (phones, the side panel) keep one column. Collapsed tiles keep their slot for now.
+- `Dockerfile`. Checks: `node server/test.mjs` (two fake devices race each other, offline and back, password, bad input).
+
+### Phase 2 (server-v0.2.0): at home on a phone
+- Installable: `server/manifest.webmanifest` and home-screen icons (`icons/app-{180,192,512}.png`, drawn by `store/render.mjs`), so "Add to Home Screen" opens it full screen like an app (iPhone and Android, no app store).
+- HTTPS through `tailscale serve` (port 3021), so phones treat it as a proper app and phase 4's offline cache can work.
+- Touch screens (`pointer: coarse` in `panel.css`): rows and x at least 44px, the tile x always showing, typing text at 16px or more so iPhones don't zoom in, no keyboard hints, and dragging a tile's bar reorders tiles instead of scrolling.
+- Opening the page on a phone doesn't focus the input, so the keyboard stays down.
+
+### Phase 3 (v1.18.0 + server-v0.3.0): the extension uses your server
+- Prefs gets a "server" field (URL and password). Empty means local only, as today.
+- Chrome asks permission for just that one address when you save it (`optional_host_permissions`), so the extension still has no website access by default.
+- When set, the panel loads `client.js` sync instead of `chrome.storage`. On first connect the server wins. If the server is empty, offer to upload the local list instead.
+- Update the privacy page, the store listing and the test rules that ban network calls (allow them only to the address you entered).
+
+### Phase 4 (server-v0.4.0): works with no signal
+- A small service worker caches the page so it opens offline.
+- Changes made offline wait on the device (in localStorage) and are sent when the signal comes back. The small-changes design already makes this safe to merge.
+- Replaces "offline blocks editing" from phase 1.
+
+### Later, only if needed
+- Live updates (the server pushes changes) instead of asking every 3 seconds. Only if 3 seconds ever feels slow.
+- Several users or lists per server. One list per server for now; run a second container for a second person.
+
+### Set up (Phase 1)
+Put it somewhere only your devices can reach. Tailscale (a free private network between your own devices) is the easy way, and it also encrypts the connection. If it's open to the internet, set a password and put it behind HTTPS (a reverse proxy like Caddy), or the password crosses the network readable.
+1. Copy this repo to the server, then in its folder: `docker build -t tascii .`
+2. `docker run -d --name tascii --restart unless-stopped -p 8080:8080 -v tascii-data:/data -e TASCII_PASSWORD=pick-one tascii`
+3. Open `http://<server>:8080` on any device.
+4. To update: copy the new files, build again, then `docker rm -f tascii` and run step 2 again. The list stays in the `tascii-data` volume.
 
 ## Install (developer mode)
 1. Open `chrome://extensions` and turn on Developer mode.

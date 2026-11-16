@@ -15,6 +15,11 @@ const presets = {
     ],
     tiles: [null, { id: 'w', name: 'work', collapsed: 'yes' }, { id: 'w', name: 'duplicate' }, { id: 5, name: 'bad' }],
   },
+  // Wide window: three tiles to lay out.
+  '#tiled': {
+    tiles: ['a', 'b', 'c'].map((id) => ({ id, name: id, collapsed: false })),
+    tasks: ['a', 'b', 'c'].map((tile) => ({ id: `t${tile}`, tile, text: `in ${tile}`, done: false })),
+  },
 };
 window.__store = structuredClone(presets[location.hash]);
 window.__errors = [];

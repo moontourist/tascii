@@ -71,6 +71,22 @@ h1 { margin: 0; color: var(--accent); font: inherit; font-weight: bold; }
 #tiles.only .close { display: none; }
 .collapsed { padding: 6px; }
 .collapsed .body { display: none; }
+/* Wide screens: tiles fill the window like Hyprland. panel.js works out each tile's --x/--y/--w/--h
+   and reads position: relative below as "tiling is on". Each tile scrolls on its own. */
+@media (min-width: 720px) {
+  html, body { height: 100%; }
+  body { display: flex; flex-direction: column; }
+  #tiles { position: relative; flex: 1; min-height: 160px; display: block; }
+  .tile { position: absolute; left: var(--x); top: var(--y); width: var(--w); height: var(--h); display: flex; flex-direction: column; }
+  .tile .body { flex: 1; min-height: 0; overflow: auto; }
+  /* Moves and resizes glide in panel.js (a stretch from the top-left corner, like Hyprland).
+     New tiles pop in, closed ones pop out, on Hyprland's usual curve (a fast start and a slight overshoot). */
+  .tile { transform-origin: 0 0; }
+  .tile.fresh { animation: popin 0.4s cubic-bezier(0.05, 0.9, 0.1, 1.05); transform-origin: 50% 50%; }
+  .tile.gone { animation: popout 0.2s ease-in forwards; transform-origin: 50% 50%; }
+}
+@keyframes popin { from { opacity: 0; transform: scale(0.85); } }
+@keyframes popout { to { opacity: 0; transform: scale(0.85); } }
 #actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 2ch; margin-top: 16px; }
 #actions button, #actions a { padding: 6px 10px; color: var(--dim); white-space: nowrap; text-decoration: none; }
 #actions a:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
@@ -136,6 +152,9 @@ li.editing::before { content: "[ ]"; flex: none; padding: 8px 1ch 8px 4px; color
 
 /* Today's progress: [#######-------------] 2/5 */
 #progress { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 1ch; padding: 0 4px; color: var(--dim); white-space: pre; }
+/* Home server only (server/client.js): no connection, so editing is blocked until it comes back. */
+.offline #today::after { content: " · offline"; color: var(--danger); }
+.offline #tiles, .offline #actions { opacity: 0.5; }
 #fill { color: var(--ok); }
 #rest { color: var(--line); }
 
@@ -182,3 +201,14 @@ summary::before { content: "+ "; }
 .history[open] summary::before { content: "- "; }
 summary:hover { color: var(--accent); }
 summary:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
+/* Touch screens (phones): finger-sized targets, the tile x always showing (there's no hover),
+   typing text at 16px or more so iPhones don't zoom in, no keyboard hints, and a tile's bar drags
+   it instead of scrolling the page. Last in the file so it wins over the rules above. */
+@media (pointer: coarse) {
+  input { font-size: max(16px, 1em); }
+  .task, .prompt { min-height: 44px; }
+  .del { width: 48px; }
+  .close { visibility: visible; }
+  .bar { touch-action: none; }
+  footer { display: none; }
+}

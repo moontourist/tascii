@@ -292,7 +292,54 @@ async function corrupt() {
   check('security: junk from another window is handled safely', names().join() === 'todo' && rows().length === 0);
 }
 
-(location.hash === '#corrupt' ? corrupt() : main())
+// Wide window: tiles fill the space like Hyprland's dwindle layout.
+async function tiling() {
+  await wait(20);
+  const W = tilesEl.clientWidth;
+  const H = tilesEl.clientHeight;
+  // Where layout() sends each tile. Headless Chrome draws no frames, so the glide itself never moves.
+  const box = (el) => {
+    const [x, y, w, h] = slot(el);
+    return { l: x, t: y, r: x + w, b: y + h };
+  };
+  const near = (a, b) => Math.abs(a - b) <= 1;
+  const fits = () => {
+    const bs = allTiles().map(box);
+    const inside = bs.every((x) => x.l >= 0 && x.t >= 0 && x.r <= W + 1 && x.b <= H + 1 && x.r - x.l > 100 && x.b - x.t > 100);
+    const apart = bs.every((x, i) => bs.every((y, j) => i === j || x.r <= y.l || y.r <= x.l || x.b <= y.t || y.b <= x.t));
+    const last = bs.at(-1);
+    return inside && apart && near(last.r, W) && near(last.b, H);
+  };
+  const [a, b, c] = allTiles().map(box);
+  check('tiled: wide window fills the space below the header', H > 400);
+  check('tiled: first tile takes the left half, full height', a.l === 0 && a.t === 0 && near(a.r, (W - 18) / 2) && near(a.b, H));
+  check('tiled: second tile top right, third below it', near(b.l, (W + 18) / 2) && b.t === 0 && near(c.l, b.l) && c.t > b.b && near(c.b, H));
+  check('tiled: tiles fill the space without overlapping', fits());
+  const SETTLE = 450; // the 0.4s glide in panel.css, plus a margin
+  addTileBtn.click();
+  check('tiled: a new tile pops in', allTiles()[3].getAnimations().some((a) => a.animationName === 'popin'));
+  check('tiled: the tile it splits glides to its new size', allTiles()[2].getAnimations().some((a) => a.id === 'glide'));
+  await wait(SETTLE);
+  check('tiled: a new tile splits the last one', allTiles().length === 4 && fits() && document.activeElement === q('.title', 3));
+  // Drag the third tile's bar onto the first tile.
+  const at = (type, el, x, y) => (el ?? window).dispatchEvent(new PointerEvent(type, { bubbles: true, button: 0, clientX: x, clientY: y }));
+  const bar = q('.bar', 2).getBoundingClientRect();
+  const first = allTiles()[0].getBoundingClientRect();
+  at('pointerdown', q('.bar', 2), bar.left + 5, bar.top + 5);
+  at('pointermove', null, first.left + 40, first.top + 60);
+  at('pointerup', null, first.left + 40, first.top + 60);
+  await wait(SETTLE);
+  check('tiled: dragging a tile onto another moves it there', __store.tiles.map((t) => t.id).join() === `c,a,b,${__store.tiles[3].id}` && fits());
+  // Close the empty new tile: the one before it takes the space at once, while it fades out.
+  const before = allTiles()[2];
+  q('.close', 3).click();
+  const [, , w, h] = slot(before);
+  check('tiled: closing a tile, the others take its space straight away', allTiles().length === 4 && near(slot(before)[1] + h, H) && near(w, (W - 18) / 2));
+  await wait(SETTLE);
+  check('tiled: the closed tile is gone and the rest fill the space', allTiles().length === 3 && fits());
+}
+
+(location.hash === '#corrupt' ? corrupt() : location.hash === '#tiled' ? tiling() : main())
   .catch((e) => check(`no crash (${e})`, false))
   .finally(() => {
     check('no page errors', __errors.length === 0);

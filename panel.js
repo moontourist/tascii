@@ -117,6 +117,7 @@ function render() {
     }
   }
   tilesEl.classList.toggle('only', tiles.length === 1);
+  layout();
 
   const open = tasks.filter((t) => !inHistory(t)).length;
   const doneToday = tasks.filter((t) => t.done && dayKey(new Date(t.doneAt)) === today.dateTime).length;
@@ -208,7 +209,9 @@ chrome.storage.local.get({ tasks: [], tiles: [] }).then((r) => {
   render();
   // Open ready for hjkl on the first task. With no tasks, open ready to type.
   // Not when embedded in a web page (the website demo): that would steal the page's focus.
-  if (window === top && document.activeElement === document.body) (stops().find((el) => el.matches('.task')) ?? firstInput())?.focus();
+  // Not on touch screens either: focusing the input would pop up the phone's keyboard.
+  const touch = matchMedia('(pointer: coarse)').matches;
+  if (window === top && !touch && document.activeElement === document.body) (stops().find((el) => el.matches('.task')) ?? firstInput())?.focus();
 });
 
 // Keys only reach the panel while it has focus (clicking the web page takes it away).
@@ -306,21 +309,59 @@ async function closeTile(btn, tile) {
   save();
   if (!calm.matches) {
     tileEls.get(tile.id).classList.add('gone');
+    layout();
     await wait(200);
   }
   render();
 }
 
+// Wide screens: tiles fill the window like Hyprland's dwindle layout. Each tile takes half of the
+// space the one before it left: side by side if that space is wide, stacked if it's tall. The last
+// takes the rest. panel.css places tiles at --x/--y/--w/--h only on wide screens; narrow ones stack.
+const GAP = 18; // room for the title set into each tile's top border
+const tiled = () => getComputedStyle(tilesEl).position === 'relative'; // panel.css decides
+// Where layout() put a tile: [x, y, w, h].
+const slot = (el) => ['x', 'y', 'w', 'h'].map((k) => parseFloat(el.style.getPropertyValue(`--${k}`)));
+// Moves glide like Hyprland's: each tile jumps to its new place and size at once, then a stretch
+// (transform) eases it there from where it was on screen. Transforms are drawn by the graphics card,
+// so the text inside isn't laid out again on every frame. New tiles pop in instead (panel.css).
+const GLIDE = { id: 'glide', duration: 400, easing: 'cubic-bezier(0.05, 0.9, 0.1, 1.05)' }; // Hyprland's usual curve
+function layout(glide = true) {
+  // A tile on its way out is skipped, so the others grow into its space while it fades.
+  const els = [...tilesEl.children].filter((el) => !el.classList.contains('gone'));
+  const moving = glide && tiled() && !calm.matches ? els.filter((el) => slot(el).every(isFinite) && !el.classList.contains('fresh')) : [];
+  const from = new Map(moving.map((el) => [el, el.getBoundingClientRect()])); // mid-glide counts: it carries on from there
+  els.forEach((el) => el.getAnimations().filter((a) => a.id === 'glide').forEach((a) => a.cancel()));
+  let [x, y, w, h] = [0, 0, tilesEl.clientWidth, tilesEl.clientHeight];
+  els.forEach((el, i) => {
+    const r = { x, y, w, h };
+    if (i < els.length - 1 && w >= h) [r.w, x, w] = [(w - GAP) / 2, x + (w + GAP) / 2, (w - GAP) / 2];
+    else if (i < els.length - 1) [r.h, y, h] = [(h - GAP) / 2, y + (h + GAP) / 2, (h - GAP) / 2];
+    for (const k in r) el.style.setProperty(`--${k}`, `${r[k]}px`);
+  });
+  for (const [el, a] of from) {
+    const b = el.getBoundingClientRect();
+    if (a.left === b.left && a.top === b.top && a.width === b.width && a.height === b.height) continue;
+    const start = `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${a.width / b.width}, ${a.height / b.height})`;
+    el.animate([{ transform: start }, { transform: 'none' }], GLIDE);
+  }
+}
+// Window resized, prefs opened, text size changed: follow at once, no glide lagging behind the mouse.
+new ResizeObserver(() => layout(false)).observe(tilesEl);
+
 // Slide the other tiles to their new places instead of jumping (the FLIP trick:
 // measure, change, then animate from the old spot to the new one).
+// Tiled, layout() does this itself, size included.
 function flip(change) {
+  if (tiled()) return change();
   const els = [...tilesEl.children];
-  const before = new Map(els.map((el) => [el, el.getBoundingClientRect().top]));
+  const before = new Map(els.map((el) => [el, el.getBoundingClientRect()]));
   change();
   if (calm.matches) return;
   for (const el of els) {
-    const dy = before.get(el) - el.getBoundingClientRect().top;
-    if (dy) el.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: 180, easing: 'ease-out' });
+    const [a, b] = [before.get(el), el.getBoundingClientRect()];
+    const [dx, dy] = [a.left - b.left, a.top - b.top];
+    if (dx || dy) el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }], { duration: 180, easing: 'ease-out' });
   }
 }
 
@@ -346,14 +387,31 @@ tilesEl.addEventListener('pointerdown', (e) => {
   const bar = e.target.closest('.bar');
   if (!bar || e.button !== 0 || e.target.closest('.close')) return;
   const el = bar.parentElement;
-  const startY = e.clientY;
+  const [startX, startY] = [e.clientX, e.clientY];
   let dragging = false;
   const move = (ev) => {
     if (!dragging) {
-      if (Math.abs(ev.clientY - startY) < 6) return;
+      if (Math.hypot(ev.clientX - startX, ev.clientY - startY) < 6) return;
       dragging = true;
       el.classList.add('dragging');
       getSelection().removeAllRanges();
+    }
+    if (tiled()) {
+      // Tiled: it takes the place of the tile under the pointer. Where tiles are headed, not where
+      // they are mid-glide, so they don't swap back and forth.
+      const box = tilesEl.getBoundingClientRect();
+      const [px, py] = [ev.clientX - box.left, ev.clientY - box.top];
+      const over = [...tilesEl.children].find((t) => {
+        const [x, y, w, h] = slot(t);
+        return px >= x && px < x + w && py >= y && py < y + h;
+      });
+      if (!over || over === el) return;
+      const later = el.compareDocumentPosition(over) & Node.DOCUMENT_POSITION_FOLLOWING;
+      flip(() => {
+        tilesEl.insertBefore(el, later ? over.nextElementSibling : over);
+        layout();
+      });
+      return;
     }
     const y = ev.clientY + scrollY;
     const others = [...tilesEl.children].filter((x) => x !== el);

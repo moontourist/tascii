@@ -1,6 +1,7 @@
 // Draws the extension icons and the Chrome Web Store images with headless Chrome.
 // Run from the repo root: node store/render.mjs   (set CHROME=/path/to/chrome if needed)
-// Writes icons/icon-{16,32,48,128}.png, store/screenshot-{1,2,3}.png, store/promo-440x280.png,
+// Writes icons/icon-{16,32,48,128}.png, the home server's home-screen icons icons/app-{180,192,512}.png,
+// store/screenshot-{1,2,3}.png, store/promo-440x280.png,
 // and site/public/og.png (the picture shown when tascii-list.com is shared).
 import { writeFileSync, mkdtempSync, mkdirSync, rmSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -34,6 +35,13 @@ for (const [size, box, font, radius, label] of [[16, 16, 13, 3, 'x'], [32, 32, 1
   shoot(`icon-${size}`, `<div style="position:absolute;left:${(size - box) / 2}px;top:${(size - box) / 2}px;width:${box}px;height:${box}px;
     border-radius:${radius}px;background:${C.bg};display:grid;place-items:center;color:${C.text};font-size:${font}px;font-weight:800;
     letter-spacing:-0.04em;line-height:1">${`<div>${glyphs}</div>`}</div>`, size, size, join(root, 'icons', `icon-${size}.png`), true);
+}
+// Home-screen icons for the home server: [x] filling a square. The phone rounds the corners itself,
+// and the art stays inside the middle 60% that Android may crop to a circle.
+for (const size of [180, 192, 512]) {
+  shoot(`app-${size}`, `<div style="position:absolute;left:0;top:0;width:${size}px;height:${size}px;background:${C.bg};display:grid;place-items:center;color:${C.text};
+    font-size:${Math.round(size * 0.3)}px;font-weight:800;letter-spacing:-0.04em;line-height:1"><div><span>[</span><b style="color:${C.ok}">x</b><span>]</span></div></div>`,
+  size, size, join(root, 'icons', `app-${size}.png`));
 }
 
 // --- The real panel with demo tasks, for the screenshots. ---

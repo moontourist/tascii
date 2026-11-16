@@ -65,11 +65,12 @@ const page = html
     `<script src="${url('tests/stub.js')}"></script><script src="panel.js"></script><script src="${url('tests/panel.test.js')}"></script>`);
 writeFileSync(join(tmp, 'harness.html'), page);
 
-for (const hash of ['', '#corrupt']) {
+// Side panel size for the main runs; a wide window for tiling.
+for (const [hash, size] of [['', '420,900'], ['#corrupt', '420,900'], ['#tiled', '1200,1000']]) {
   let dom = '';
   try {
     dom = execFileSync(chrome, ['--headless', '--disable-gpu', `--user-data-dir=${join(tmp, 'profile')}`,
-      '--allow-file-access-from-files', '--virtual-time-budget=10000', '--dump-dom',
+      '--allow-file-access-from-files', '--virtual-time-budget=10000', `--window-size=${size}`, '--dump-dom',
       pathToFileURL(join(tmp, 'harness.html')).href + hash], { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
   } catch (e) {
     check(`browser: Chrome ran (${e.message.split('\n')[0]})`, false);
