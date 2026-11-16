@@ -73,6 +73,7 @@ const files = {
   '/panel.js': ['text/javascript', 'panel.js'],
   '/prefs.js': ['text/javascript', 'prefs.js'],
   '/sync.js': ['text/javascript', 'sync.js'],
+  '/sw.js': ['text/javascript', 'server/sw.js'],
   ...Object.fromEntries([16, 32, 48, 128].map((n) => [`/icons/icon-${n}.png`, ['image/png', `icons/icon-${n}.png`]])),
   '/favicon.ico': ['image/png', 'icons/icon-32.png'],
   '/manifest.webmanifest': ['application/manifest+json', 'server/manifest.webmanifest'],

@@ -166,15 +166,15 @@ Reported: crossing off a task threw its sparks from the panel's top-left corner,
 - The website's demo no longer switches theme on its own timer, which sometimes beat the page's wipe. It asks the page to run one wipe (`wipeIn` in `prefs.js`) and switches inside it, so both change together.
 - Prefs that come back unchanged (our own save, echoed from another window) no longer redraw.
 
-### Phase 2 (v1.19.0): animations that follow the text size
+### Phase 2 (v1.20.0): animations that follow the text size
 - Bigger or smaller text moves every row. Sparks are placed once, by screen position, so changing the size (or scrolling) while they fly leaves them behind. Start them inside the task's row instead, so they move with it at any size.
 - Same check for the other moving parts: the strike line, the row slide, and tiles moving with J/K or dragging.
 - The test runs the cross-off at all six text sizes (13 to 26px) and with the list scrolled.
 
-### Phase 3 (v1.20.0): no redraws mid-animation
+### Phase 3 (v1.21.0): no redraws mid-animation
 - A real change from another window, or the midnight redraw, can still land during an animation. Hold it until the animation ends, then apply it. More likely with a home server, whose changes arrive every few seconds.
 
-### Phase 4 (v1.21.0): check it the way you see it
+### Phase 4 (v1.22.0): check it the way you see it
 - `tests/motion.mjs` loads the real extension into a test copy of Chrome and saves frames of each animation (cross-off, restore, delete, theme wipe) at the smallest and largest text, so a change can be checked by eye before release.
 - A short checklist here for the side panel itself: each theme, smallest and largest text, a long scrolled list.
 
@@ -291,10 +291,13 @@ Run tascii on your own server, open it from any device (phone included, no app s
 - Privacy page, README and store listing say what's sent where. Test rules: network calls only in `sync.js`, and only to the server's address.
 - Checks: a test run connects the real panel to a real server (bad address, unreachable, wrong password, then right), adds a task that lands on the server and not in the browser, and disconnects back to the local list.
 
-### Phase 4 (server-v0.4.0): works with no signal
-- A small service worker caches the page so it opens offline.
-- Changes made offline wait on the device (in localStorage) and are sent when the signal comes back. The small-changes design already makes this safe to merge.
-- Replaces "offline blocks editing" from phase 1.
+### Phase 4 (v1.19.0 + server-v0.4.0): works with no signal
+- `sync.js` keeps this device's copy in localStorage: the last list it saw, the server's version number, and the changes still waiting. A page opened with no signal shows that copy, editing carries on, and waiting changes go when the signal is back. "offline" by the date is the only sign. A device that has never seen the list still waits for the server, so an empty list never passes for the real one.
+- On opening, waiting changes go first, then the server's list is the truth.
+- `server/sw.js` (the server's page only, HTTPS only, so use the `https://…:3021` address): a service worker that keeps the page's files. It asks the server first, so updates show straight away, and uses its saved copy with no signal or after 3 seconds of weak signal. The list itself isn't kept there.
+- Fixed: a save with nothing new (say, re-saving the same list) left `sync.js` thinking a send was still running, so nothing more went out until the page was reloaded. That's the "extension stopped syncing" bug from phase 3.
+- Known limit: two tabs on one device, both offline, can overwrite each other's waiting changes on disk. Each still sends its own while it's open.
+- Checks: `server/test.mjs` reopens a device with no signal (its copy and waiting change are there, then reach the server), checks a device that's never seen the list waits, and checks a save with nothing new doesn't stop later saves (fails with the old code).
 
 ### Later, only if needed
 - Live updates (the server pushes changes) instead of asking every 3 seconds. Only if 3 seconds ever feels slow.

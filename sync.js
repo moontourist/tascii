@@ -3,7 +3,8 @@
 // The server holds the list. Each save from panel.js is turned into small changes against what this
 // page last saw ("task 12: done is now true"), so the server can merge edits from several devices.
 // Changes from other devices arrive by asking the server every few seconds.
-// No connection: the list dims, "offline" shows by the date, and editing is blocked until the server answers.
+// No connection: "offline" shows by the date, and editing carries on. This device keeps its last copy of the
+// list and the changes still waiting, so the page also opens with no signal, and waiting changes go when it's back.
 // Used by the server's own page (address '' means the page's own server) and by the extension when
 // a server is set in prefs. The website demo loads it but never calls it.
 
@@ -39,10 +40,23 @@ function serverStorage(address, password = '') {
   let flushing = null;
   const listeners = [];
 
-  function offline(on) {
-    document.documentElement.classList.toggle('offline', on);
-    for (const id of ['tiles', 'actions']) document.getElementById(id)?.toggleAttribute('inert', on);
-  }
+  // This device's copy, kept between visits (one per server address). Two tabs offline at once can
+  // overwrite each other's waiting changes here, but each still sends its own while it's open.
+  const KEEP = `tascii-sync ${base}`;
+  let kept = null;
+  try { kept = JSON.parse(localStorage.getItem(KEEP)); } catch {} // blocked or junk: start fresh
+  if (Array.isArray(kept?.shown?.tasks) && Array.isArray(kept.shown.tiles) && Array.isArray(kept.queue) && Number.isInteger(kept.rev)) {
+    ({ shown, rev } = kept);
+    queue.push(...kept.queue);
+  } else kept = null;
+  const keep = () => {
+    try { localStorage.setItem(KEEP, JSON.stringify({ shown, rev, queue })); } catch {} // full or blocked: still works while open
+  };
+
+  // The server's own page also opens with no signal: sw.js keeps its files (HTTPS pages only).
+  if (!address) navigator.serviceWorker?.register('sw.js').catch(() => {});
+
+  const offline = (on) => document.documentElement.classList.toggle('offline', on);
 
   async function call(path, body) {
     const r = await fetch(base + path, body
@@ -58,27 +72,30 @@ function serverStorage(address, password = '') {
     if (!s || s.rev <= rev || queue.length) return;
     rev = s.rev;
     const next = { tasks: s.tasks, tiles: s.tiles };
-    if (sameJSON(next, shown)) return;
+    if (sameJSON(next, shown)) return keep();
     shown = next;
+    keep();
     listeners.forEach((f) => f({ tasks: { newValue: structuredClone(s.tasks) }, tiles: { newValue: structuredClone(s.tiles) } }, 'local'));
   }
 
   // Send queued changes one batch at a time. On failure they stay queued and go with the next try.
-  function flush() {
-    flushing ??= (async () => {
-      try {
-        while (queue.length) {
-          const batch = queue.slice();
-          const s = await call('api/ops', batch);
-          queue.splice(0, batch.length);
-          take(s);
-        }
-      } catch {
-        offline(true);
-      } finally {
-        flushing = null;
+  async function send() {
+    try {
+      while (queue.length) {
+        const batch = queue.slice();
+        const s = await call('api/ops', batch);
+        queue.splice(0, batch.length);
+        keep();
+        take(s);
       }
-    })();
+    } catch {
+      offline(true);
+    }
+  }
+  // One send at a time. The clearing waits for .finally, which always runs later: with nothing to send,
+  // send() is already done before `flushing` is set, and clearing first would leave it set for good.
+  function flush() {
+    flushing ??= send().finally(() => { flushing = null; });
     return flushing;
   }
 
@@ -94,16 +111,22 @@ function serverStorage(address, password = '') {
 
   return {
     local: {
-      // Waits for the server, however long that takes: an empty list shouldn't pass for the real one.
+      // Changes left waiting from last time go first, then the server's list is the truth.
+      // No signal: this device's last copy, with its own changes. Never seen the list on this device:
+      // wait for the server, however long that takes, since an empty list shouldn't pass for the real one.
       get: async (defaults) => {
         for (;;) {
+          await flush();
           try {
             const s = await call('api/state');
-            rev = s.rev;
-            shown = { tasks: s.tasks, tiles: s.tiles };
+            if (!queue.length) {
+              [rev, shown] = [s.rev, { tasks: s.tasks, tiles: s.tiles }];
+              keep();
+            }
             return { ...defaults, ...structuredClone(shown) };
           } catch {
             offline(true);
+            if (kept) return { ...defaults, ...structuredClone(shown) };
             await new Promise((r) => setTimeout(r, POLL));
           }
         }
@@ -114,6 +137,7 @@ function serverStorage(address, password = '') {
         const order = next.tiles.map((t) => t.id);
         if (!sameJSON(order, shown.tiles.map((t) => t.id))) queue.push({ op: 'order', ids: order });
         shown = next;
+        keep();
         return flush();
       },
     },

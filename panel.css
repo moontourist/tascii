@@ -156,9 +156,8 @@ li.editing::before { content: "[ ]"; flex: none; padding: 8px 1ch 8px 4px; color
 
 /* Today's progress: [#######-------------] 2/5 */
 #progress { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 1ch; padding: 0 4px; color: var(--dim); white-space: pre; }
-/* Home server only (server/client.js): no connection, so editing is blocked until it comes back. */
+/* Home server only (sync.js): no connection. Editing carries on; changes wait and go when it's back. */
 .offline #today::after { content: " · offline"; color: var(--danger); }
-.offline #tiles, .offline #actions { opacity: 0.5; }
 #fill { color: var(--ok); }
 #rest { color: var(--line); }
 

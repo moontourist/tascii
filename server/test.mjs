@@ -21,11 +21,13 @@ const check = (name, ok) => {
 };
 
 // A device: sync.js in its own sandbox, like the server's page (address '' is the page's own server).
-// `up` false makes its network fail.
+// `up` false makes its network fail. `disk` is its localStorage: pass another device's to open the page again there.
 const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'sync.js'), 'utf8');
-function device() {
-  const d = { up: true, events: {}, classes: new Set(), seen: [] };
+function device(disk = new Map(), up = true) {
+  const d = { up, disk, events: {}, classes: new Set(), seen: [] };
   const window = {
+    localStorage: { getItem: (k) => disk.get(k) ?? null, setItem: (k, v) => disk.set(k, String(v)) },
+    navigator: {}, // no service worker here
     fetch: (u, o) => (d.up ? fetch(u.startsWith('http') ? u : base + u, o) : Promise.reject(new Error('no signal'))),
     btoa,
     setInterval: () => {}, // polls run by hand below
@@ -83,6 +85,7 @@ await fetch(`${base}api/ops`, { method: 'POST', headers: { ...auth, 'Content-Typ
 const ids = new Set(Array.from({ length: 50 }, laptop.uuid));
 check('plain http: new ids still work (randomUUID filled in)', ids.size === 50 && [...ids].every((u) => /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(u)));
 const empty = await laptop.store.get({ tasks: [], tiles: [] });
+await laptop.store.set({ tasks: [], tiles: [] }); // a save with nothing new must not stop later saves going out
 const tile = { id: 'g', name: 'groceries', collapsed: false };
 await laptop.store.set({ tasks: [{ id: 'milk', tile: 'g', text: 'milk', done: false }], tiles: [tile] });
 const start = await phone.store.get({});
@@ -114,6 +117,24 @@ const bad = [null, { op: 'task', id: 'x', set: { done: true } }, { op: 'task', i
 s = await (await fetch(`${base}api/ops`, { method: 'POST', headers: { ...auth, 'Content-Type': 'application/json' }, body: JSON.stringify(bad) })).json();
 check('bad changes skipped, the good one kept', s.tasks.map((t) => t.id).join() === 'milk,ok' && !('evil' in s.tasks[0]) && s.tasks[0].text === 'milk');
 check('saved to disk', JSON.parse(readFileSync(process.env.TASCII_DATA, 'utf8')).rev === s.rev);
+
+// No signal, then the page is closed: the change waits on the device, and the page opens again with no signal.
+phone.up = false;
+await phone.store.set({ tasks: [...now.filter((t) => t.id !== 'eggs'), { id: 'jam', tile: 'g', text: 'jam', done: false }], tiles: [tile] });
+const reopened = device(phone.disk, false);
+const kept = await reopened.store.get({});
+check('reopened with no signal: shows its last copy, with the change made offline', kept.tasks.map((t) => t.id).join() === 'milk,jam'
+  && reopened.classes.has('offline'));
+reopened.up = true;
+await reopened.poll();
+s = await (await fetch(`${base}api/state`, { headers: auth })).json();
+check('signal back after reopening: the waiting change reaches the server, nothing else lost',
+  s.tasks.map((t) => t.id).join() === 'milk,ok,jam' && !reopened.classes.has('offline'));
+const later = device(phone.disk);
+check('opened again online: the server\'s list, including what other devices added', (await later.store.get({})).tasks.map((t) => t.id).join() === 'milk,ok,jam');
+const stranger = device(new Map(), false);
+const first = await Promise.race([stranger.store.get({}), new Promise((r) => setTimeout(() => r('waiting'), 200))]);
+check('never seen the list, no signal: waits instead of showing an empty list', first === 'waiting');
 
 server.close();
 rmSync(dir, { recursive: true, force: true });
