@@ -9,7 +9,7 @@ A minimalist to-do list that lives in Chrome's side panel, drawn in plain ASCII.
 ![tascii in the side panel, next to a web page](store/screenshot-1.png)
 
 ## What it does
-- **Opens instantly.** Click the toolbar icon and your lists are there. No framework or libraries: the whole extension is about 13 KB compressed.
+- **Opens instantly.** Click the toolbar icon and your lists are there. No framework or libraries: the whole extension is about 25 KB compressed.
 - **Lists in tiles.** Stack as many lists as you like (today, work, groceries). Rename them, fold them, drag them into order.
 - **Satisfying to finish.** Crossing a task off spins `[ ]` to `[x]`, throws a few ASCII sparks, strikes the words through and moves it to that list's history.
 - **Nothing is lost by accident.** Deleted tasks go to history as `[-]`, and `u` undoes the last delete, even a whole list.
@@ -43,7 +43,30 @@ If the keys do nothing, click the panel first: the line at the bottom says so wh
 ## Private
 Tasks are saved in your browser and never leave your computer. No account, no tracking, no network requests. The extension asks for two permissions, the side panel and storage, so it can't see the pages you visit.
 
-Want the same list on your phone? Run your own tascii server in Docker (see "Home server" in [PLAN.md](PLAN.md)) and put its address in prefs. Chrome asks to let the extension reach that one address, and your list then lives on your server. Nothing goes anywhere else. [Privacy policy](https://tascii-list.com/privacy).
+Want the same list on your phone? Run your own tascii server (see [Self-host](#self-host-optional) below) and put its address in prefs. Chrome asks to let the extension reach that one address, and your list then lives on your server. Nothing goes anywhere else. [Privacy policy](https://tascii-list.com/privacy).
+
+## Self-host (optional)
+Run tascii on your own machine in Docker and use the same list from the extension, your phone and any browser. Edits from two devices at once both survive, and each device keeps working with no signal, catching up when it's back.
+
+1. Build and start the container (needs [Docker](https://docs.docker.com/get-docker/)):
+   ```sh
+   git clone https://github.com/moontourist/tascii && cd tascii
+   docker build -t tascii .
+   docker run -d --name tascii --restart unless-stopped -p 8080:8080 \
+     -v tascii-data:/data -e TASCII_PASSWORD=pick-a-password tascii
+   ```
+   The list is saved in the `tascii-data` volume, so it survives restarts and updates. Leave out `TASCII_PASSWORD` only if nothing else can reach the port.
+2. Open `http://<your-machine>:8080`. The browser asks for the password once (any username).
+3. **Phone:** open the address and choose "Add to Home Screen". It opens full screen like an app. To work offline it needs HTTPS. [Tailscale](https://tailscale.com) gives you that without opening ports to the internet: run `tailscale serve --bg --https=3021 http://localhost:8080` on the machine, then use `https://<machine>.<tailnet>.ts.net:3021`.
+4. **Extension:** press `p`, fill in the server row (address and password) and pick `[ connect ]`. Chrome asks to let tascii reach that one address. An empty server gets this browser's list; otherwise the server's list wins. This browser's own list stays saved: clear the address to go back to it.
+
+**Update:** `git pull`, `docker build -t tascii .`, then `docker rm -f tascii` and the same `docker run` line. The list stays in the volume.
+
+| Setting | Default | What it does |
+|---|---|---|
+| `TASCII_PASSWORD` | none | asked for before anything is shown |
+| `PORT` | `8080` | port inside the container |
+| `TASCII_DATA` | `/data/tascii.json` | where the list is saved |
 
 ## How it's built
 Plain HTML, CSS and JavaScript, with no build step and no dependencies.
@@ -52,7 +75,9 @@ Plain HTML, CSS and JavaScript, with no build step and no dependencies.
 |---|---|
 | `manifest.json`, `background.js` | the extension's setup; clicking the icon opens the side panel |
 | `panel.html`, `panel.css`, `panel.js` | the to-do list |
-| `prefs.js` | theme and text size, shared with the website |
+| `prefs.js` | theme, text size and server address, shared with the website |
+| `sync.js` | talks to your server and keeps an offline copy |
+| `server/`, `Dockerfile` | the self-hosted server (Node built-ins only) |
 | `tests/` | the test suite |
 | `store/` | Chrome Web Store listing text and images |
 | `site/` | tascii-list.com, whose demo is this same panel |
@@ -60,6 +85,7 @@ Plain HTML, CSS and JavaScript, with no build step and no dependencies.
 
 ## Develop
 - `node tests/run.mjs` runs the tests (needs Chrome). They check the permissions and security policy, ban unsafe code patterns, then run the panel in headless Chrome against HTML injection, corrupted data and every feature.
+- `node server/test.mjs` tests the server: two devices editing at once, offline and back, password, bad input.
 - `./pack.sh` runs the tests and builds the Chrome Web Store zip.
 - `node store/render.mjs` redraws the icons, store images and the picture above.
 - `sh site/build.sh` builds the website into `site/dist`. Cloudflare runs it on every merge to `main`.
