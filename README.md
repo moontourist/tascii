@@ -1,10 +1,10 @@
-# tascii
+# [x] tascii
 
-![tascii: a minimalist ASCII to-do list for Chrome's side panel](site/public/og.png)
+![[x] tascii: a minimalist ASCII to-do list for Chrome](assets/logo.png)
 
 A minimalist to-do list that lives in Chrome's side panel, drawn in plain ASCII.
 
-**[tascii-list.com](https://tascii-list.com)** has a live demo you can try without installing anything. The Chrome Web Store listing is in review.
+**[Get it on the Chrome Web Store](https://chromewebstore.google.com/detail/tascii/lgchdnjcaalaoifhceeeoggfmohoagol)**, or try the live demo at [tascii-list.com](https://tascii-list.com) without installing anything.
 
 ![tascii in the side panel, next to a web page](store/screenshot-1.png)
 
@@ -19,7 +19,7 @@ A minimalist to-do list that lives in Chrome's side panel, drawn in plain ASCII.
 - **Your look.** Three themes (gruvbox, dark, light) that wipe across when you switch, and text sizes from 13 to 26px.
 
 ## Install
-From the Chrome Web Store once the listing is approved. Until then:
+From the [Chrome Web Store](https://chromewebstore.google.com/detail/tascii/lgchdnjcaalaoifhceeeoggfmohoagol). Or load it from source:
 1. Download this repo and open `chrome://extensions`.
 2. Turn on **Developer mode**, click **Load unpacked** and pick the folder.
 3. Pin tascii and click its icon.
@@ -80,6 +80,7 @@ Plain HTML, CSS and JavaScript, with no build step and no dependencies.
 | `server/`, `Dockerfile` | the self-hosted server (Node built-ins only) |
 | `tests/` | the test suite |
 | `store/` | Chrome Web Store listing text and images |
+| `assets/` | the README banner (`render.mjs`) |
 | `site/` | tascii-list.com, whose demo is this same panel |
 | `PLAN.md` | what's been built, version by version, and what's next |
 
@@ -87,7 +88,7 @@ Plain HTML, CSS and JavaScript, with no build step and no dependencies.
 - `node tests/run.mjs` runs the tests (needs Chrome). They check the permissions and security policy, ban unsafe code patterns, then run the panel in headless Chrome against HTML injection, corrupted data and every feature.
 - `node server/test.mjs` tests the server: two devices editing at once, offline and back, password, bad input.
 - `./pack.sh` runs the tests and builds the Chrome Web Store zip.
-- `node store/render.mjs` redraws the icons, store images and the picture above.
+- `node store/render.mjs` redraws the icons, store images and the link preview. `node assets/render.mjs` redraws the banner above.
 - `sh site/build.sh` builds the website into `site/dist`. Cloudflare runs it on every merge to `main`.
 
 Releases are tagged: `vX.Y.Z` for the extension (always matching `manifest.json`) and `site-vX.Y.Z` for the website.
